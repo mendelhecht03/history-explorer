@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; img-src data: blob: 'self'; manifest-src 'self'">
+<meta name="theme-color" content="#f7f7f8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121316" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="History">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="icon" href="/icon-180.png">
+<title>History</title>
+<style>
+:root{
+  --bg:#f7f7f8;--panel:#fff;--text:#18181b;--muted:#71717a;--faint:#a1a1aa;--line:#e7e7ea;
+  --accent:#4f5bd5;--share:#4f5bd514;--empty:#ebedf0;
+  --vp:#1d4ed8;--p:#60a5fa;--n:#a1a1aa;--d:#f87171;--vd:#b91c1c;
+  --sys:#f2f2f7;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#121316;--panel:#1b1c20;--text:#ececf0;--muted:#9a9aa3;--faint:#6b6b74;--line:#2a2b31;
+  --accent:#8b93f0;--share:#8b93f01c;--empty:#25262c;--sys:#000;
+  --vp:#3b82f6;--p:#93c5fd;--n:#71717a;--d:#f87171;--vd:#ef4444;}}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}a:hover{text-decoration:underline}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;padding:0}
+input,select,textarea{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:5px 8px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+header{padding:22px 0 0}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{font-weight:700;font-size:17px;letter-spacing:-.2px;margin-right:auto}
+.filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#q{width:200px}
+.link{color:var(--muted);font-size:13px}.link:hover{color:var(--text)}
+nav{display:flex;gap:22px;border-bottom:1px solid var(--line);margin-top:16px}
+nav button{padding:10px 0;color:var(--muted);font-weight:500;border-bottom:2px solid transparent;margin-bottom:-1px}
+nav button:hover{color:var(--text)}
+nav button.on{color:var(--text);border-color:var(--text)}
+main{padding:28px 0 80px}
+.muted{color:var(--muted)}.small{font-size:12px}
+h2{font-size:15px;font-weight:600;margin:0 0 12px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px 20px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}
+
+/* KPI row */
+.kpis{display:flex;gap:0;flex-wrap:wrap;margin:-4px 0 18px}
+.kpi{padding:4px 28px 8px 0;margin-right:28px;text-align:left;border-bottom:2px solid transparent}
+.kpi .l{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.kpi .n{font-size:24px;font-weight:700;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.kpi .c{font-size:12px;margin-left:6px;font-weight:500}
+.kpi.sel{border-color:var(--accent)}
+.kpi[data-act]:hover .l{color:var(--text)}
+.up{color:#15803d}.down{color:#b91c1c}
+
+/* share-bar list (the main building block) */
+.lh{display:flex;justify-content:space-between;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:0 0 6px}
+.lr{position:relative;display:flex;align-items:center;gap:10px;padding:6px 8px;margin:0 -8px;border-radius:4px;min-height:32px}
+.lr .bar{position:absolute;left:0;top:2px;bottom:2px;background:var(--share);border-radius:4px;z-index:0}
+.lr>*:not(.bar){position:relative;z-index:1}
+.lr .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lr .v{font-variant-numeric:tabular-nums;color:var(--text);font-weight:500}
+.lr[data-act]{cursor:pointer}.lr[data-act]:hover .nm{text-decoration:underline}
+.lr .sub{color:var(--muted);font-size:12px;margin-left:6px}
+.ico{width:16px;height:16px;border-radius:3px;flex:none;display:inline-grid;place-items:center;font-size:9px;font-weight:700;color:#fff;background:var(--faint)}
+.empty{padding:28px 0;text-align:center;color:var(--muted)}
+
+/* chart */
+.chart svg{display:block;width:100%;height:220px}
+.chart .gl{stroke:var(--line);stroke-width:1}
+.chart .ln{fill:none;stroke:var(--accent);stroke-width:2}
+.chart .ar{fill:var(--accent);opacity:.08}
+.chart text{fill:var(--faint);font-size:11px}
+.chart .hit{fill:transparent}.chart .hit:hover{fill:var(--share)}
+
+/* GitHub-style calendar */
+.cal{display:flex;gap:3px;overflow-x:auto;padding-bottom:4px}
+.cal .wk{display:flex;flex-direction:column;gap:3px}
+.cal i,.hw i,.legend i{display:block;width:11px;height:11px;border-radius:2px;background:var(--empty)}
+.cal .ml{height:14px;font-size:10px;color:var(--muted);white-space:nowrap;width:11px;overflow:visible}
+.l1{background:color-mix(in srgb,var(--accent) 25%,var(--empty))!important}
+.l2{background:color-mix(in srgb,var(--accent) 50%,var(--empty))!important}
+.l3{background:color-mix(in srgb,var(--accent) 75%,var(--empty))!important}
+.l4{background:var(--accent)!important}
+.hw{display:grid;grid-template-columns:28px repeat(24,11px);gap:3px;font-size:10px;color:var(--muted);align-items:center}
+.legend{display:flex;gap:3px;align-items:center;font-size:11px;color:var(--muted);margin-top:8px}
+
+/* tables */
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:8px;border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
+th.num,td.num{text-align:right}
+th.s:after{content:" ↓"}th.s.asc:after{content:" ↑"}
+td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.sel td{background:var(--share)}
+.nmcell{position:relative}
+.nmcell .bar{position:absolute;left:0;top:3px;bottom:3px;background:var(--share);border-radius:4px}
+.nmcell .in{position:relative;display:flex;gap:8px;align-items:center;min-width:0}
+.nmcell .in>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ttl{max-width:520px}
+.cat{font-size:11px;color:var(--muted);white-space:nowrap}
+.st{font-size:12px;color:var(--faint);padding:2px 6px;border-radius:4px;border:1px solid transparent}
+.st:hover{color:var(--text);border-color:var(--line)}
+.st.on.block{color:#fff;background:var(--vd)}.st.on.allow{color:#fff;background:var(--vp)}
+.more{display:block;margin:16px auto;color:var(--accent);font-weight:500}
+.detail td{background:var(--bg);padding:12px 16px}
+.detail .pl{max-height:340px;overflow:auto;margin-top:8px}
+.detail .pl div{display:flex;gap:12px;padding:3px 0}
+.detail .pl .c{width:36px;text-align:right;color:var(--muted);flex:none;font-variant-numeric:tabular-nums}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:5px 10px;font-weight:500;font-size:13px}
+.btn:hover{border-color:var(--faint)}
+.btn.pri{background:var(--text);color:var(--bg);border-color:var(--text)}
+.actions{position:sticky;bottom:16px;display:none;gap:8px;align-items:center;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:16px;box-shadow:0 4px 16px #0000001a;z-index:20}
+.actions.show{display:flex}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip{font-size:13px;color:var(--muted);padding:3px 10px;border-radius:999px;border:1px solid var(--line)}
+.chip.on{color:var(--text);border-color:var(--text)}
+
+/* habit check */
+.headline{font-size:22px;line-height:1.35;font-weight:600;letter-spacing:-.3px;max-width:760px;margin:0 0 6px}
+.headline b{color:var(--vd)}
+.scale{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:18px 0 8px;background:var(--empty)}
+.scale span{height:100%}
+.keys{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.keys i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
+.lv{font-size:12px;font-weight:600;white-space:nowrap}
+.why{font-size:12px;color:var(--muted)}
+.hrow{display:grid;grid-template-columns:24px 1fr auto auto;gap:4px 12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.hrow .acts{display:flex;gap:4px}
+.dot{width:10px;height:10px;border-radius:50%}
+.stack svg{display:block;width:100%;height:160px}
+.stack text{fill:var(--faint);font-size:11px}
+
+.lists{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+textarea{width:100%;min-height:260px;font-family:ui-monospace,Consolas,monospace;font-size:13px;resize:vertical}
+
+#toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,80px);background:var(--text);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;transition:transform .2s;z-index:60}
+#toast.show{transform:translate(-50%,0)}
+#modal{position:fixed;inset:0;background:#0006;display:none;place-items:center;z-index:50}
+#modal.show{display:grid}
+#modal .panel{width:min(480px,92vw)}
+
+.phone{display:none}
+/* ---------- phone: Screen Time-style grouped lists ---------- */
+@media (max-width:720px){
+  body{background:var(--sys);font-size:16px}
+  .wrap{padding:0 16px}
+  header{padding:calc(env(safe-area-inset-top) + 12px) 0 0}
+  .brand{font-size:28px;font-weight:700;letter-spacing:-.5px;width:100%}
+  #q{width:100%;order:9;border-radius:10px;padding:8px 12px;background:var(--panel);border:0}
+  .filters{width:100%}
+  .filters select{flex:1;border:0;border-radius:10px;padding:8px;background:var(--panel)}
+  .desk{display:none!important}.phone{display:block}
+  nav{position:fixed;left:0;right:0;bottom:0;z-index:30;margin:0;gap:0;justify-content:space-around;background:color-mix(in srgb,var(--panel) 92%,transparent);backdrop-filter:blur(16px);border-top:1px solid var(--line);border-bottom:0;padding-bottom:env(safe-area-inset-bottom)}
+  nav button{flex:1;font-size:11px;padding:10px 0 8px;border:0;margin:0}
+  nav button.on{color:var(--accent)}
+  main{padding:18px 0 110px}
+  .panel{border:0;border-radius:12px;padding:4px 16px}
+  .panel h2{margin:12px 0 4px}
+  .sect{font-size:13px;text-transform:uppercase;color:var(--muted);margin:22px 4px 6px;letter-spacing:.02em}
+  .grid2,.lists{grid-template-columns:1fr;gap:0}
+  .grid2>.panel{margin-top:22px}
+  .lr{margin:0;padding:10px 0;border-bottom:.5px solid var(--line);border-radius:0;min-height:44px}
+  .lr:last-child{border-bottom:0}
+  .lr .bar{display:none}
+  .ico{width:24px;height:24px;border-radius:6px;font-size:12px}
+  .lh{display:none}
+  .big{padding:14px 0}
+  .big .l{font-size:13px;color:var(--muted)}
+  .big .n{font-size:34px;font-weight:700;letter-spacing:-.8px}
+  .kpis{display:none}
+  .chart{display:none}
+  /* tables become grouped lists */
+  .tablewrap{background:var(--panel);border-radius:12px;padding:0 12px}
+  thead{display:none}
+  table,tbody{display:block}
+  tr{display:flex;align-items:center;gap:10px;border-bottom:.5px solid var(--line);padding:9px 0}
+  tr:last-child{border-bottom:0}
+  td{border:0;padding:0}
+  td.hidem{display:none}
+  td.nmcell{flex:1;min-width:0}
+  .nmcell .bar{display:none}
+  .cat{display:none}
+  tr.detail{display:block}
+  input[type=checkbox]{width:20px;height:20px}
+  .actions{position:fixed;left:12px;right:12px;bottom:calc(64px + env(safe-area-inset-bottom));border-radius:12px}
+  .actions .btn{flex:1 1 45%;padding:9px}
+  .headline{font-size:20px}
+  .hrow{grid-template-columns:28px 1fr auto;padding:12px 0}
+  .hrow .acts{grid-column:2/4}
+  .ttl{max-width:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="top">
+    <span class="brand">History</span><a class="link phone" href="/settings.html" style="margin-left:auto;margin-right:8px">Settings</a>
+    <div class="filters">
+      <input id="q" placeholder="Filter" autocomplete="off">
+      <select id="range"></select>
+      <span id="custom" style="display:none"><input type="date" id="from"> – <input type="date" id="to"></span>
+      <select id="dev"></select>
+      <select id="prof"></select>
+    </div>
+  </div>
+  <div class="top desk" style="margin-top:8px;gap:16px">
+    <label class="link"><input type="checkbox" id="grp" style="vertical-align:-2px"> Combine subdomains</label>
+    <button class="link" id="surprise">Random forgotten page</button>
+    <button class="link" id="rebuild" style="display:none">Refresh data</button>
+    <span class="link" id="gen" style="margin-left:auto"></span>
+  </div>
+  <nav id="tabs"></nav>
+</header>
+<main id="main"></main>
+</div>
+<div id="toast"></div>
+<div id="modal"><div class="panel" id="mbody"></div></div>
+<script>
+const D=/*__DATA__*/null;
+"use strict";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=n=>Math.round(n).toLocaleString();
+const V=D.v,U=D.urls,H=D.hosts,SR=D.s,NV=V.t.length,NS=SR.t.length;
+const TZ=new Date().getTimezoneOffset()*60;
+const dayOf=t=>Math.floor((t-TZ)/86400);
+const dateOfDay=d=>new Date(d*86400000+TZ*1000);
+const DOW=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const ago=t=>{const s=Date.now()/1000-t;if(s<3600)return Math.max(1,Math.round(s/60))+"m ago";if(s<86400)return Math.round(s/3600)+"h ago";if(s<86400*45)return Math.round(s/86400)+"d ago";return new Date(t*1000).toLocaleDateString()};
+const dtime=t=>new Date(t*1000).toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
+const hrs=s=>s>=3600?(s/3600).toFixed(s>=36000?0:1)+"h":Math.round(s/60)+"m";
+const MULTI=new Set("co.uk org.uk ac.uk gov.uk me.uk com.au net.au org.au co.il org.il ac.il gov.il co.jp ne.jp co.nz com.br co.in co.za com.mx com.tr com.cn co.kr com.sg com.hk".split(" "));
+function baseOf(h){const p=h.split(".");if(p.length<=2||/^[\d.]+$/.test(h)||h.includes(":"))return h;const l2=p.slice(-2).join(".");return MULTI.has(l2)?p.slice(-3).join("."):l2}
+const HB=H.map(baseOf);
+const urlHost=U.map(r=>r[2]);
+const ICONS=D.icons;
+function ico(hostIdx,label){const src=hostIdx!=null&&ICONS[hostIdx];return src?`<img class="ico" src="${src}" alt="">`:`<span class="ico">${esc((label||"?")[0].toUpperCase())}</span>`}
+const devName=d=>D.devices[d]?.name??"?";
+
+/* ---------- categories ---------- */
+const CAT={};
+const addCat=(c,list)=>list.split(" ").forEach(d=>CAT[d]=c);
+addCat("Social","facebook.com instagram.com tiktok.com x.com twitter.com threads.net snapchat.com reddit.com tumblr.com pinterest.com linkedin.com bsky.app 9gag.com imgur.com quora.com vk.com weibo.com mastodon.social discord.com telegram.org whatsapp.com bereal.com");
+addCat("Video","youtube.com twitch.tv kick.com netflix.com hulu.com primevideo.com disneyplus.com max.com hbomax.com crunchyroll.com vimeo.com dailymotion.com rumble.com peacocktv.com paramountplus.com tubitv.com pluto.tv");
+addCat("News","cnn.com foxnews.com nytimes.com washingtonpost.com bbc.com bbc.co.uk theguardian.com dailymail.co.uk nypost.com buzzfeed.com tmz.com huffpost.com msn.com yahoo.com usatoday.com nbcnews.com cnbc.com bloomberg.com forbes.com businessinsider.com axios.com politico.com ynet.co.il ycombinator.com theverge.com");
+addCat("Shopping","amazon.com ebay.com aliexpress.com temu.com shein.com etsy.com walmart.com target.com bestbuy.com wish.com zara.com hm.com nike.com wayfair.com costco.com");
+addCat("Games","roblox.com chess.com lichess.org poki.com crazygames.com miniclip.com steampowered.com epicgames.com itch.io coolmathgames.com draftkings.com fanduel.com bet365.com stake.com");
+addCat("Sports","espn.com nba.com nfl.com bleacherreport.com theathletic.com mlb.com nhl.com ninersnation.com");
+const WORK=new Set("github.com stackoverflow.com claude.ai anthropic.com python.org npmjs.com vercel.app notion.so figma.com atlassian.net slack.com w3schools.com mozilla.org localhost".split(" "));
+const UTIL=new Set("google.com bing.com duckduckgo.com chatgpt.com openai.com microsoft.com live.com office.com office365.com outlook.com sharepoint.com zoom.us wikipedia.org apple.com icloud.com dropbox.com canva.com gstatic.com googleusercontent.com googleapis.com cloudflare.com chase.com paypal.com".split(" "));
+const ADULT=/porn|xxx|xvideos|xnxx|xhamster|onlyfans|redtube|youporn|chaturbate|stripchat|brazzers|spankbang|hentai|rule34|fansly|camsoda|bongacams|livejasmin|motherless|eporner|tube8|nsfw/;
+const catOf=b=>CAT[b]||(ADULT.test(b)?"Adult":WORK.has(b)?"Work":UTIL.has(b)?"Utility":null);
+/* productivity scale, RescueTime-style: 0 very productive … 4 very distracting */
+const LV=[["Very productive","var(--vp)"],["Productive","var(--p)"],["Neutral","var(--n)"],["Distracting","var(--d)"],["Very distracting","var(--vd)"]];
+function levelOf(b,score){if(WORK.has(b))return 0;if(UTIL.has(b))return 1;const c=CAT[b]||(ADULT.test(b)?"Adult":null);
+  if(c==="Adult")return 4;if(score!=null){if(score>=55)return 4;if(score>=35)return 3}return c?3:2}
+
+/* ---------- state ---------- */
+const LS={get:(k,d)=>{try{return JSON.parse(localStorage.getItem("chd."+k))??d}catch{return d}},set:(k,v)=>localStorage.setItem("chd."+k,JSON.stringify(v))};
+const S={tab:LS.get("tab","overview"),range:LS.get("range","30"),from:"",to:"",dev:-1,prof:-1,q:"",group:LS.get("group","base"),metric:"visits",
+  sort:{sites:["visits",-1],pages:["visits",-1],searches:["count",-1]},limit:{sites:300,pages:300,searches:300},open:null,eng:-1};
+const sel={sites:new Set(),pages:new Set(),searches:new Set()};
+let lists={block:LS.get("block",[]),allow:LS.get("allow",[])};
+let dismissed=new Set(LS.get("dismissed",[]));
+const API=location.protocol.startsWith("http");
+let pushT;function pushServer(){if(!API)return;clearTimeout(pushT);pushT=setTimeout(()=>fetch("/api/lists",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({block:lists.block,allow:lists.allow,dismissed:[...dismissed]})}).catch(()=>toast("Couldn't save your lists")),300)}
+const saveLists=()=>{LS.set("block",lists.block);LS.set("allow",lists.allow);pushServer()};
+const saveDismissed=()=>{LS.set("dismissed",[...dismissed]);pushServer()};
+async function pullServer(){if(!API)return;try{const d=await (await fetch("/api/lists")).json();
+  if(d){lists.block=d.block||[];lists.allow=d.allow||[];dismissed=new Set(d.dismissed||[]);LS.set("block",lists.block);LS.set("allow",lists.allow);LS.set("dismissed",[...dismissed]);render()}else pushServer()}catch{}}
+const listState=k=>lists.block.includes(k)?"block":lists.allow.includes(k)?"allow":"";
+function setList(keys,which){for(const k of keys){lists.block=lists.block.filter(x=>x!==k);lists.allow=lists.allow.filter(x=>x!==k);if(which)lists[which].push(k)}lists.block.sort();lists.allow.sort();saveLists()}
+
+const TABS=[["overview","Overview"],["sites","Sites"],["searches","Searches"],["pages","Pages"],["habits","Habits"],["lists","Lists"]];
+const RANGES=[["today","Today"],["7","Last 7 days"],["30","Last 30 days"],["90","Last 90 days"],["all","All time"],["custom","Custom…"]];
+
+/* ---------- filtering & aggregation ---------- */
+function rng(){const now=Date.now()/1000;
+  if(S.range==="all")return[0,Infinity];
+  if(S.range==="today"){const d=new Date();d.setHours(0,0,0,0);return[d/1000,Infinity]}
+  if(S.range==="custom"){const a=S.from?new Date(S.from+"T00:00").getTime()/1000:0,b=S.to?new Date(S.to+"T23:59:59").getTime()/1000:Infinity;return[a,b]}
+  return[now-(+S.range)*86400,Infinity]}
+function prevRng(){if(!/^\d+$/.test(S.range))return null;const[a]=rng(),len=+S.range*86400;if(!NV||a-len<V.t[0])return null;return[a-len,a]} // only compare when the earlier period is fully covered
+const keep=(i,arr)=>!(S.dev>=0&&arr.dev[i]!==S.dev)&&!(S.prof>=0&&arr.p[i]!==S.prof);
+let C=null;
+function compute(){
+  const [a,b]=rng(),vis=[],ss=[];
+  for(let i=0;i<NV;i++){const t=V.t[i];if(t>=a&&t<=b&&keep(i,V))vis.push(i)}
+  for(let i=0;i<NS;i++){const t=SR.t[i];if(t>=a&&t<=b&&keep(i,SR))ss.push(i)}
+  const t0=vis.length?V.t[vis[0]]:0,t1=vis.length?V.t[vis[vis.length-1]]:0;
+  const sites=new Map(),pages=new Map(),days=new Map(),dayDur=new Map(),daySites=new Map(),heat=new Array(168).fill(0),devc=new Map(),byBaseDay=new Map();
+  for(const i of vis){
+    const u=V.u[i],h=urlHost[u],t=V.t[i],k=S.group==="host"?H[h]:HB[h],d=dayOf(t),lt=new Date(t*1000);
+    let s=sites.get(k);if(!s){s={k,visits:0,pages:new Set(),days:new Set(),dur:0,last:0,first:t,devs:new Set(),hosts:new Map()};sites.set(k,s)}
+    s.visits++;s.pages.add(u);s.days.add(d);s.dur+=V.d[i];s.last=t;s.devs.add(V.dev[i]);s.hosts.set(h,(s.hosts.get(h)||0)+1);
+    let p=pages.get(u);if(!p){p={u,visits:0,last:0,dur:0};pages.set(u,p)}p.visits++;p.last=t;p.dur+=V.d[i];
+    days.set(d,(days.get(d)||0)+1);dayDur.set(d,(dayDur.get(d)||0)+V.d[i]);
+    heat[lt.getDay()*24+lt.getHours()]++;devc.set(V.dev[i],(devc.get(V.dev[i])||0)+1);
+    let m=byBaseDay.get(d);if(!m){m=new Map();byBaseDay.set(d,m)}m.set(HB[h],(m.get(HB[h])||0)+1);
+  }
+  for(const s of sites.values()){let best=-1,bh=null;for(const[h,c]of s.hosts)if(c>best){best=c;bh=h}s.icon=bh}
+  const searches=new Map(),daySearch=new Map();
+  for(const i of ss){const term=SR.term[i],k=term.toLowerCase().replace(/\s+/g," ").trim();let s=searches.get(k);
+    if(!s){s={k,term,count:0,last:0,engs:new Set(),devs:new Set(),u:SR.u[i]};searches.set(k,s)}
+    s.count++;s.last=SR.t[i];s.term=term;s.engs.add(SR.e[i]);s.devs.add(SR.dev[i]);s.u=SR.u[i];const d=dayOf(SR.t[i]);daySearch.set(d,(daySearch.get(d)||0)+1)}
+  // previous period, for the change figures
+  let prev=null;const pr=prevRng();
+  if(pr){prev={visits:0,searches:0,dur:0,sites:new Set(),byBase:new Map()};
+    for(let i=0;i<NV;i++){const t=V.t[i];if(t<pr[0]||t>=pr[1]||!keep(i,V))continue;const h=urlHost[V.u[i]];prev.visits++;prev.dur+=V.d[i];prev.sites.add(S.group==="host"?H[h]:HB[h]);prev.byBase.set(HB[h],(prev.byBase.get(HB[h])||0)+1)}
+    for(let i=0;i<NS;i++){const t=SR.t[i];if(t>=pr[0]&&t<pr[1]&&keep(i,SR))prev.searches++}
+    if(!prev.visits)prev=null}
+  C={vis,ss,sites,pages,days,dayDur,heat,devc,searches,daySearch,byBaseDay,t0,t1,prev,
+     activeDays:Math.max(1,days.size),spanDays:vis.length?dayOf(t1)-dayOf(t0)+1:1};
+  C.hab=habits();C.habMap=new Map(C.hab.map(h=>[h.k,h]));
+}
+const lvOfBase=b=>levelOf(b,C.habMap.get(b)?.score);
+
+/* ---------- habit scoring ---------- */
+function habits(){
+  const m=new Map();
+  for(const i of C.vis){const h=urlHost[V.u[i]],k=HB[h],t=V.t[i];let s=m.get(k);
+    if(!s){s={k,ts:[],dur:0,hosts:new Map()};m.set(k,s)}s.ts.push(t);s.dur+=V.d[i];s.hosts.set(h,(s.hosts.get(h)||0)+1)}
+  const span=C.activeDays,out=[];
+  for(const s of m.values()){
+    const k=s.k,n=s.ts.length,cat=CAT[k]||(ADULT.test(k)?"Adult":null);if(n<(cat==="Adult"?1:8))continue;
+    let sessions=0,prev=-1e12,night=0;const dset=new Set(),sessByDay=new Map();
+    for(const t of s.ts){if(t-prev>600){sessions++;const d=dayOf(t);sessByDay.set(d,(sessByDay.get(d)||0)+1)}prev=t;dset.add(dayOf(t));if(new Date(t*1000).getHours()<5)night++}
+    const spd=sessions/span,habit=dset.size/span,nightShare=night/n,maxDay=Math.max(...sessByDay.values());
+    const tool=WORK.has(k)||UTIL.has(k);
+    let score=Math.min(1,spd/3)*38+Math.min(1,habit/.5)*20+Math.min(1,nightShare/.2)*12+Math.min(1,maxDay/10)*10+(cat?(cat==="Adult"?45:22):0);
+    if(tool)score*=.3;score=Math.round(Math.min(99,score));
+    const why=[];
+    why.push(spd>=1?`opened ${spd>=10?Math.round(spd):spd.toFixed(1)} times a day`:`${sessions} separate visits`);
+    if(dset.size>=3)why.push(`on ${dset.size} of ${span} days`);
+    if(nightShare>=.08)why.push(`${Math.round(nightShare*100)}% after midnight`);
+    if(maxDay>=8)why.push(`up to ${maxDay} times in one day`);
+    if(s.dur>1800)why.push(`about ${hrs(s.dur)} open`);
+    if(cat)why.push(cat.toLowerCase());
+    let bh=null,best=-1;for(const[h,c]of s.hosts)if(c>best){best=c;bh=h}
+    out.push({k,score,why,cat,sessions,spd,icon:bh,n,level:levelOf(k,score)});
+  }
+  return out.sort((a,b)=>b.score-a.score);
+}
+
+/* ---------- building blocks ---------- */
+function change(cur,prev,invert){if(prev==null||!C.prev||!prev)return"";const p=Math.round((cur-prev)/prev*100);if(!p)return `<span class="c muted">0%</span>`;
+  const good=invert?p<0:p>0;return `<span class="c ${good?"up":"down"}">${p>0?"↑":"↓"} ${Math.abs(p)}%</span>`}
+// rows: {label, icon, value, show, act, k, sub}
+function list(rows,{title,col="Visits",empty="Nothing here yet."}={}){
+  if(!rows.length)return `<div class="empty">${empty}</div>`;const mx=Math.max(...rows.map(r=>r.value),1);
+  return `<div class="lh"><span>${title||""}</span><span>${col}</span></div>${rows.map(r=>`<div class="lr" ${r.act?`data-act="${r.act}" data-k="${esc(r.k??r.label)}"`:""}><span class="bar" style="width:${(r.value/mx*100).toFixed(1)}%"></span>${r.icon??""}<span class="nm">${esc(r.label)}${r.sub?`<span class="sub">${esc(r.sub)}</span>`:""}</span><span class="v">${r.show??fmt(r.value)}</span></div>`).join("")}`}
+function dayRange(){const d0=dayOf(C.t0),d1=Math.max(dayOf(C.t1),dayOf(Date.now()/1000));const [a]=rng();return[a>0?Math.min(d0,dayOf(a)):d0,d1]}
+function lineChart(){
+  const [d0,d1]=dayRange(),n=d1-d0+1,src=S.metric==="searches"?C.daySearch:S.metric==="time"?C.dayDur:C.days;
+  const vals=[];for(let d=d0;d<=d1;d++)vals.push(src.get(d)||0);
+  const W=1000,Hh=200,pad=28,mx=Math.max(...vals,1),nice=niceMax(mx),x=i=>pad+(n<2?0:i*(W-pad-8)/(n-1)),y=v=>Hh-v/nice*(Hh-12);
+  const fmtV=v=>S.metric==="time"?hrs(v):fmt(v);
+  let g="";for(let k=0;k<=4;k++){const v=nice*k/4;g+=`<line class="gl" x1="${pad}" x2="${W}" y1="${y(v)}" y2="${y(v)}"/><text x="0" y="${y(v)+4}">${S.metric==="time"?hrs(v):fmt(v)}</text>`}
+  const pts=vals.map((v,i)=>`${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+  let lab="",step=Math.max(1,Math.ceil(n/8));for(let i=0;i<n;i+=step)lab+=`<text x="${x(i)}" y="${Hh+18}" text-anchor="middle">${dateOfDay(d0+i).toLocaleDateString([], {month:"short",day:"numeric"})}</text>`;
+  let hits="";const bw=(W-pad)/n;for(let i=0;i<n;i++)hits+=`<rect class="hit" x="${x(i)-bw/2}" y="0" width="${bw}" height="${Hh}"><title>${dateOfDay(d0+i).toDateString()}: ${fmtV(vals[i])}</title></rect>`;
+  return `<div class="chart"><svg viewBox="0 0 ${W} ${Hh+24}" preserveAspectRatio="none">${g}<polygon class="ar" points="${x(0)},${Hh} ${pts} ${x(n-1)},${Hh}"/><polyline class="ln" points="${pts}" vector-effect="non-scaling-stroke"/>${hits}${lab}</svg></div>`}
+function niceMax(v){const p=Math.pow(10,Math.floor(Math.log10(v)));for(const m of[1,2,2.5,5,10])if(m*p>=v)return m*p;return v}
+// stacked bars by productivity level, per day (≤ 31 days) or per week
+function stackChart(maxBars=31){
+  const [d0,d1]=dayRange(),days=d1-d0+1,weekly=days>maxBars,bins=[];
+  for(let d=d0;d<=d1;d++){const bi=weekly?Math.floor((d-d0)/7):d-d0;if(!bins[bi])bins[bi]={d,lv:[0,0,0,0,0]};const m=C.byBaseDay.get(d);if(m)for(const[b,c]of m)bins[bi].lv[lvOfBase(b)]+=c}
+  const W=1000,Hh=130,n=bins.length,mx=niceMax(Math.max(1,...bins.map(b=>b.lv.reduce((a,c)=>a+c,0)))),bw=W/n;
+  let s="";bins.forEach((b,i)=>{let y=Hh;for(let l=4;l>=0;l--){const h=b.lv[l]/mx*Hh;if(!h)continue;y-=h;s+=`<rect x="${i*bw+bw*.18}" y="${y}" width="${bw*.64}" height="${h}" fill="${LV[l][1]}"><title>${weekly?"Week of ":""}${dateOfDay(b.d).toDateString()} · ${LV[l][0]}: ${fmt(b.lv[l])}</title></rect>`}
+    if(n<=8||i%Math.ceil(n/7)===0)s+=`<text x="${i*bw+bw/2}" y="${Hh+16}" text-anchor="middle">${weekly?dateOfDay(b.d).toLocaleDateString([], {month:"short",day:"numeric"}):n<=8?DOW[dateOfDay(b.d).getDay()][0]:dateOfDay(b.d).getDate()}</text>`});
+  return `<div class="stack"><svg viewBox="0 0 ${W} ${Hh+22}" preserveAspectRatio="none">${s}</svg></div>`}
+function ramp(v,mx){if(!v)return"";const r=v/mx;return r>.75?"l4":r>.5?"l3":r>.25?"l2":"l1"}
+function calendar(){
+  const [d0,d1]=dayRange(),start=Math.max(d0,d1-370),first=start-dateOfDay(start).getDay();let mx=1;for(const v of C.days.values())mx=Math.max(mx,v);
+  let out="",lastM=-1;
+  for(let w=first;w<=d1;w+=7){const m=dateOfDay(w+6).getMonth();out+=`<div class="wk"><span class="ml">${m!==lastM&&w+6>=start?dateOfDay(w+6).toLocaleDateString([], {month:"short"}):""}</span>`;if(w+6>=start)lastM=m;
+    for(let d=w;d<w+7;d++){if(d<start||d>d1){out+=`<i style="visibility:hidden"></i>`;continue}const v=C.days.get(d)||0;out+=`<i class="${ramp(v,mx)}" title="${dateOfDay(d).toDateString()}: ${fmt(v)} visits"></i>`}out+="</div>"}
+  return `<div class="cal">${out}</div><div class="legend">Less <i></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i> More</div>`}
+function hourWeek(){const mx=Math.max(...C.heat,1),hp=h=>h===0?"12a":h<12?h+"a":h===12?"12p":(h-12)+"p";
+  return `<div class="hw"><span></span>${Array.from({length:24},(_,h)=>`<span>${h%6===0?hp(h):""}</span>`).join("")}${[1,2,3,4,5,6,0].map(d=>`<span>${DOW[d]}</span>`+Array.from({length:24},(_,h)=>`<i class="${ramp(C.heat[d*24+h],mx)}" title="${DOW[d]} ${hp(h)}: ${fmt(C.heat[d*24+h])} visits"></i>`).join("")).join("")}</div>`}
+
+/* ---------- views ---------- */
+function vOverview(){
+  if(!C.vis.length)return `<div class="empty">No visits in this period.</div>`;
+  const sites=[...C.sites.values()].sort((a,b)=>b.visits-a.visits),P=C.prev;
+  const totalDur=sites.reduce((a,s)=>a+s.dur,0),perDay=C.vis.length/C.spanDays;
+  const kpis=[["visits","Visits",fmt(C.vis.length),change(C.vis.length,P?.visits)],[null,S.group==="host"?"Hosts":"Sites",fmt(C.sites.size),change(C.sites.size,P?.sites.size)],
+    [null,"Pages",fmt(C.pages.size),""],["searches","Searches",fmt(C.ss.length),change(C.ss.length,P?.searches)],["time","Time open",hrs(totalDur),change(totalDur,P?.dur)]];
+  const tops=[...C.searches.values()].sort((a,b)=>b.count-a.count).slice(0,10);
+  const pages=[...C.pages.values()].sort((a,b)=>b.visits-a.visits).slice(0,10);
+  const devs=[...C.devc].sort((a,b)=>b[1]-a[1]);
+  const dist=distract();
+  return `
+  <div class="kpis">${kpis.map(([m,l,n,c])=>`<button class="kpi ${m&&S.metric===m?"sel":""}" ${m?`data-act="metric" data-k="${m}"`:""}><div class="l">${l}</div><div class="n">${n}${c}</div></button>`).join("")}</div>
+  <div class="panel desk">${lineChart()}</div>
+  <div class="phone">
+    <div class="panel big"><div class="l">Daily average</div><div class="n">${fmt(perDay)} visits</div>${C.prev?`<div class="small muted">${changeText(C.vis.length,P.visits)} from the previous period</div>`:""}
+      ${stackChart(7)}<div class="keys" style="padding:8px 0 12px">${LV.map(([n,c])=>`<span><i style="background:${c}"></i>${n}</span>`).join("")}</div></div>
+    ${dist.n?`<div class="sect">Distracting</div><div class="panel" data-act="tab" data-k="habits"><div class="lr"><span class="nm">${dist.pct}% of visits went to distracting sites</span><span class="muted">›</span></div></div>`:""}
+  </div>
+  <div class="grid2">
+    <div class="panel"><div class="sect phone" style="margin:8px 0 0">Most visited</div>${list(sites.slice(0,10).map(s=>({label:s.k,icon:ico(s.icon,s.k),value:s.visits,act:"site"})),{title:"Site"})}</div>
+    <div class="panel"><div class="sect phone" style="margin:8px 0 0">Searches</div>${list(tops.map(s=>({label:s.term,value:s.count,act:"opensearch",k:s.k})),{title:"Search",col:"Times",empty:"No searches in this period."})}</div>
+    <div class="panel"><div class="sect phone" style="margin:8px 0 0">Top pages</div>${list(pages.map(p=>({label:U[p.u][1]||U[p.u][0],icon:ico(urlHost[p.u],H[urlHost[p.u]]),value:p.visits,act:"page",k:String(p.u)})),{title:"Page"})}</div>
+    <div class="panel"><div class="sect phone" style="margin:8px 0 0">Devices</div>${list(devs.map(([d,v])=>({label:devName(d),value:v,show:`${fmt(v)} <span class="muted small">${Math.round(v/C.vis.length*100)}%</span>`})),{title:"Device"})}</div>
+  </div>
+  <div class="panel" style="margin-top:20px"><h2>Activity</h2>${calendar()}</div>
+  <div class="panel desk" style="margin-top:20px"><h2>Time of week</h2>${hourWeek()}</div>
+  <div class="panel" style="margin-top:20px"><h2>Highlights</h2>${highlights(sites)}</div>`;
+}
+const changeText=(c,p)=>{if(!p)return"";const x=Math.round((c-p)/p*100);return x===0?"Same":`${x>0?"Up":"Down"} ${Math.abs(x)}%`};
+function distract(){let n=0;for(const s of C.hab)if(s.level>=3)n+=s.n;return{n,pct:Math.round(n/Math.max(1,C.vis.length)*100)}}
+function highlights(sites){
+  const hourTot=new Array(24).fill(0);C.heat.forEach((v,i)=>hourTot[i%24]+=v);const ph=hourTot.indexOf(Math.max(...hourTot));
+  const hp=h=>h===0?"midnight":h<12?h+" AM":h===12?"noon":(h-12)+" PM";
+  const busiest=[...C.days].sort((a,b)=>b[1]-a[1])[0],loyal=[...sites].sort((a,b)=>b.days.size-a.days.size)[0];
+  let run=0,best={n:0},prevK=null,runStart=0;
+  for(const i of C.vis){const h=urlHost[V.u[i]],k=S.group==="host"?H[h]:HB[h];if(k===prevK)run++;else{run=1;prevK=k;runStart=V.t[i]}if(run>best.n)best={n:run,k,t:runStart}}
+  const night=hourTot.slice(0,5).reduce((a,b)=>a+b,0);
+  const rows=[["Busiest hour",hp(ph)],busiest&&["Busiest day",`${dateOfDay(busiest[0]).toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"})} · ${fmt(busiest[1])} visits`],
+    loyal&&["Most days",`${loyal.k} · ${loyal.days.size} of ${C.activeDays} days`],best.n>3&&["Longest streak on one site",`${best.k} · ${best.n} pages in a row`],
+    ["Between midnight and 5 AM",`${Math.round(night/C.vis.length*100)}% of visits`]].filter(Boolean);
+  return rows.map(([a,b])=>`<div class="lr"><span class="nm muted">${a}</span><span class="v">${esc(b)}</span></div>`).join("")+
+    `<div class="lr"><button class="link" data-act="surprise">Show me a random page I forgot about →</button></div>`}
+
+function sortHead(view,cols){const[sk,sd]=S.sort[view];return `<tr>${cols.map(([k,l,num,cls])=>k?`<th data-act="sort" data-v="${view}" data-k="${k}" class="${num?"num ":""}${sk===k?"s"+(sd>0?" asc":""):""}">${l}</th>`:`<th class="${cls||""}">${l}</th>`).join("")}</tr>`}
+const stBtns=k=>{const st=listState(k);return `<button class="st block ${st==="block"?"on":""}" data-act="mark" data-w="block" data-k="${esc(k)}" title="Block list">Block</button><button class="st allow ${st==="allow"?"on":""}" data-act="mark" data-w="allow" data-k="${esc(k)}" title="Allow list">Allow</button>`};
+const more=(v,left)=>left>0?`<button class="more" data-act="more" data-v="${v}">Show ${fmt(Math.min(500,left))} more</button>`:"";
+const selAllBox=(v,rows,keyOf)=>{const all=rows.length&&rows.every(r=>sel[v].has(keyOf(r)));return `<input type="checkbox" data-act="selall" data-v="${v}" ${all?"checked":""}>`};
+
+function vSites(){
+  const q=S.q.toLowerCase();let rows=[...C.sites.values()];if(q)rows=rows.filter(r=>r.k.includes(q));
+  const[sk,sd]=S.sort.sites,get={name:r=>r.k,visits:r=>r.visits,pages:r=>r.pages.size,days:r=>r.days.size,time:r=>r.dur,last:r=>r.last}[sk];
+  rows.sort((x,y)=>{const a=get(x),b=get(y);return(a<b?-1:a>b?1:0)*sd});C.siteRows=rows;
+  const mx=Math.max(1,...rows.map(r=>r.visits)),shown=rows.slice(0,S.limit.sites);
+  return `<div class="muted small" style="margin-bottom:10px">${fmt(rows.length)} ${S.group==="host"?"hosts":"sites"}. Select a name to see its pages; tick rows to copy them or add them to a list.</div>
+  <div class="tablewrap"><table><thead>${sortHead("sites",[[null,selAllBox("sites",shown,r=>r.k)],["name","Site"],["visits","Visits",1],["pages","Pages",1],["days","Days",1],["time","Time",1],["last","Last visit",1],[null,"List"]])}</thead><tbody>
+  ${shown.map(r=>{const b=baseOf(r.k),lv=lvOfBase(b);return `<tr class="${sel.sites.has(r.k)?"sel":""}"><td><input type="checkbox" data-act="sel" data-v="sites" data-k="${esc(r.k)}" ${sel.sites.has(r.k)?"checked":""}></td>
+  <td class="nmcell"><span class="bar" style="width:${(r.visits/mx*100).toFixed(1)}%"></span><span class="in" data-act="open" data-k="${esc(r.k)}" style="cursor:pointer">${ico(r.icon,r.k)}<span>${esc(r.k)}</span><span class="cat" style="color:${lv>=3?LV[lv][1]:""}">${catOf(b)||""}</span></span></td>
+  <td class="num">${fmt(r.visits)}</td><td class="num hidem">${fmt(r.pages.size)}</td><td class="num hidem">${r.days.size}</td><td class="num hidem">${r.dur?hrs(r.dur):"–"}</td>
+  <td class="num hidem" title="${dtime(r.last)}">${ago(r.last)}</td><td style="white-space:nowrap">${stBtns(r.k)}</td></tr>${S.open===r.k?detailRow(r):""}`}).join("")}</tbody></table></div>
+  ${more("sites",rows.length-shown.length)}`}
+function sitePages(k){return [...C.pages.values()].filter(p=>{const h=urlHost[p.u];return(S.group==="host"?H[h]:HB[h])===k}).sort((a,b)=>b.visits-a.visits)}
+function detailRow(r){const ps=sitePages(r.k);
+  return `<tr class="detail"><td colspan="8"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><b>${fmt(ps.length)} pages on ${esc(r.k)}</b><span style="flex:1"></span>
+  <button class="btn" data-act="copysitepages" data-k="${esc(r.k)}">Copy ${fmt(ps.length)} links</button><button class="btn" data-act="copysitepages" data-f="md" data-k="${esc(r.k)}">Copy as Markdown</button><button class="btn" data-act="close">Close</button></div>
+  <div class="pl">${ps.slice(0,400).map(p=>`<div><span class="c">${p.visits}</span><a href="${esc(U[p.u][0])}" target="_blank" rel="noreferrer noopener" title="${esc(U[p.u][0])}">${esc(U[p.u][1]||U[p.u][0])}</a><span class="muted small">${ago(p.last)}</span></div>`).join("")}${ps.length>400?`<div class="muted">…and ${fmt(ps.length-400)} more (included when you copy)</div>`:""}</div></td></tr>`}
+
+function vPages(){
+  const q=S.q.toLowerCase();let rows=[...C.pages.values()];if(q)rows=rows.filter(p=>U[p.u][0].toLowerCase().includes(q)||U[p.u][1].toLowerCase().includes(q));
+  const[sk,sd]=S.sort.pages,get={name:p=>(U[p.u][1]||U[p.u][0]).toLowerCase(),visits:p=>p.visits,last:p=>p.last,time:p=>p.dur}[sk];
+  rows.sort((x,y)=>{const a=get(x),b=get(y);return(a<b?-1:a>b?1:0)*sd});C.pageRows=rows;
+  const shown=rows.slice(0,S.limit.pages),mx=Math.max(1,...shown.map(p=>p.visits));
+  return `<div class="muted small" style="margin-bottom:10px">${fmt(rows.length)} pages${q?` matching “${esc(S.q)}”`:""}</div>
+  <div class="tablewrap"><table><thead>${sortHead("pages",[[null,selAllBox("pages",shown,p=>p.u)],["name","Page"],[null,"Site",0,"hidem"],["visits","Visits",1],["time","Time",1],["last","Last visit",1]])}</thead><tbody>
+  ${shown.map(p=>{const h=urlHost[p.u];return `<tr class="${sel.pages.has(p.u)?"sel":""}"><td><input type="checkbox" data-act="sel" data-v="pages" data-k="${p.u}" ${sel.pages.has(p.u)?"checked":""}></td>
+  <td class="nmcell"><span class="bar" style="width:${(p.visits/mx*100).toFixed(1)}%"></span><span class="in ttl">${ico(h,H[h])}<span><a href="${esc(U[p.u][0])}" target="_blank" rel="noreferrer noopener" title="${esc(U[p.u][0])}">${esc(U[p.u][1]||U[p.u][0])}</a></span></span></td>
+  <td class="muted hidem">${esc(H[h])}</td><td class="num">${p.visits}</td><td class="num hidem">${p.dur?hrs(p.dur):"–"}</td><td class="num hidem" title="${dtime(p.last)}">${ago(p.last)}</td></tr>`}).join("")}</tbody></table></div>
+  ${more("pages",rows.length-shown.length)}`}
+
+function vSearches(){
+  const q=S.q.toLowerCase();let rows=[...C.searches.values()];if(q)rows=rows.filter(s=>s.k.includes(q));
+  if(S.eng>=0)rows=rows.filter(s=>s.engs.has(S.eng));
+  const[sk,sd]=S.sort.searches,get={name:s=>s.k,count:s=>s.count,last:s=>s.last}[sk];
+  rows.sort((x,y)=>{const a=get(x),b=get(y);return(a<b?-1:a>b?1:0)*sd});C.searchRows=rows;
+  const ec=new Map();for(const i of C.ss)ec.set(SR.e[i],(ec.get(SR.e[i])||0)+1);const engs=[...ec].sort((a,b)=>b[1]-a[1]);
+  const words=new Map(),STOP=new Set("the a an of to in for and or on is how what with my me i you do does near vs from at by be are can it this that best".split(" "));
+  for(const i of C.ss)for(const w of SR.term[i].toLowerCase().split(/[^\p{L}\p{N}']+/u))if(w.length>2&&!STOP.has(w))words.set(w,(words.get(w)||0)+1);
+  const topW=[...words].sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const shown=rows.slice(0,S.limit.searches),mx=Math.max(1,...shown.map(s=>s.count));
+  return `<div class="grid2" style="margin:0 0 20px">
+    <div class="panel"><div class="sect phone" style="margin:8px 0 0">Where you search</div>${list(engs.slice(0,8).map(([e,v])=>({label:D.engines[e],value:v,act:"eng"})),{title:"Engine",col:"Searches",empty:"No searches in this period."})}</div>
+    <div class="panel"><div class="sect phone" style="margin:8px 0 0">Most-used words</div>${list(topW.map(([w,c])=>({label:w,value:c,act:"q"})),{title:"Word",col:"Searches",empty:"No searches in this period."})}</div></div>
+  <div class="chips"><button class="chip ${S.eng<0?"on":""}" data-act="eng" data-k="">All</button>${engs.slice(0,10).map(([e])=>`<button class="chip ${S.eng===e?"on":""}" data-act="eng" data-k="${esc(D.engines[e])}">${esc(D.engines[e])}</button>`).join("")}<span class="muted small" style="margin-left:auto;align-self:center">${fmt(rows.length)} different searches</span></div>
+  <div class="tablewrap"><table><thead>${sortHead("searches",[[null,selAllBox("searches",shown,s=>s.k)],["name","Search"],[null,"Where",0,"hidem"],["count","Times",1],[null,"Device",0,"hidem"],["last","Last",1]])}</thead><tbody>
+  ${shown.map(s=>`<tr class="${sel.searches.has(s.k)?"sel":""}"><td><input type="checkbox" data-act="sel" data-v="searches" data-k="${esc(s.k)}" ${sel.searches.has(s.k)?"checked":""}></td>
+  <td class="nmcell"><span class="bar" style="width:${(s.count/mx*100).toFixed(1)}%"></span><span class="in"><span><a href="${esc(U[s.u][0])}" target="_blank" rel="noreferrer noopener">${esc(s.term)}</a></span></span></td>
+  <td class="muted hidem">${[...s.engs].map(e=>esc(D.engines[e])).join(", ")}</td><td class="num">${s.count}</td><td class="muted hidem">${[...s.devs].map(devName).map(esc).join(", ")}</td><td class="num hidem" title="${dtime(s.last)}">${ago(s.last)}</td></tr>`).join("")}</tbody></table></div>
+  ${more("searches",rows.length-shown.length)}`}
+
+function vHabits(){
+  const q=S.q.toLowerCase(),rows=C.hab.filter(h=>!dismissed.has(h.k)&&(!q||h.k.includes(q)));
+  const lvVisits=[0,0,0,0,0];for(const[b,n]of baseTotals())lvVisits[lvOfBase(b)]+=n;
+  const tot=Math.max(1,lvVisits.reduce((a,b)=>a+b,0)),dPct=Math.round((lvVisits[3]+lvVisits[4])/tot*100);
+  const worst=C.hab.filter(h=>h.level>=3).sort((a,b)=>b.sessions-a.sessions)[0];
+  let prevLine="";if(C.prev){let pd=0,pt=0;for(const[b,n]of C.prev.byBase){pt+=n;if(levelOf(b,C.habMap.get(b)?.score)>=3)pd+=n}if(pt){const pp=Math.round(pd/pt*100),diff=dPct-pp;prevLine=diff===0?"The same share as the period before.":`${diff<0?"Down":"Up"} from ${pp}% the period before.`}}
+  const toBlock=C.hab.filter(h=>!dismissed.has(h.k)&&h.level>=3&&!lists.block.includes(h.k));
+  const loops=[...C.searches.values()].filter(s=>s.count>=5).sort((a,b)=>b.count-a.count).slice(0,12);
+  return `<p class="headline">${worst?`<b>${dPct}%</b> of your browsing went to distracting sites. You went back to <b>${esc(worst.k)}</b> ${worst.spd>=1?`${worst.spd.toFixed(1)} times a day`:`${worst.sessions} times`}.`:"Nothing distracting stands out in this period."}</p>
+  <div class="muted">${prevLine} A visit after 10 or more minutes away counts as going back.</div>
+  <div class="scale">${lvVisits.map((v,i)=>v?`<span style="width:${v/tot*100}%;background:${LV[i][1]}" title="${LV[i][0]}: ${fmt(v)} visits"></span>`:"").join("")}</div>
+  <div class="keys">${LV.map(([n,c],i)=>`<span><i style="background:${c}"></i>${n} ${Math.round(lvVisits[i]/tot*100)}%</span>`).join("")}</div>
+  <div class="grid2"><div class="panel"><h2>By ${C.spanDays>31?"week":"day"}</h2>${stackChart()}</div>
+    <div class="panel"><h2>Searches you repeat</h2>${list(loops.map(s=>({label:s.term,value:s.count,act:"opensearch",k:s.k})),{title:"Search",col:"Times",empty:"No repeated searches."})}</div></div>
+  <div class="panel" style="margin-top:20px"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-top:6px"><h2 style="margin:0">Sites ranked by how often you go back</h2><span style="flex:1"></span>
+    ${toBlock.length?`<button class="btn" data-act="blockall">Add ${toBlock.length} distracting sites to block list</button>`:""}${dismissed.size?`<button class="link" data-act="undismiss">Show ${dismissed.size} hidden</button>`:""}</div>
+  ${rows.length?rows.slice(0,60).map(h=>{const st=listState(h.k);return `<div class="hrow">${ico(h.icon,h.k)}<div style="min-width:0"><div><a href="#" data-act="gosite" data-k="${esc(h.k)}">${esc(h.k)}</a>${st?` <span class="muted small">· on ${st} list</span>`:""}</div><div class="why">${esc(h.why.join(" · "))}</div></div>
+    <span class="lv" style="color:${LV[h.level][1]}">${LV[h.level][0]}</span>
+    <div class="acts"><button class="st block ${st==="block"?"on":""}" data-act="mark" data-w="block" data-k="${esc(h.k)}">Block</button><button class="st allow ${st==="allow"?"on":""}" data-act="mark" data-w="allow" data-k="${esc(h.k)}">Fine</button><button class="st" data-act="dismiss" data-k="${esc(h.k)}">Hide</button></div></div>`}).join(""):`<div class="empty">Nothing to show for this period.</div>`}</div>`}
+function baseTotals(){const m=new Map();for(const dm of C.byBaseDay.values())for(const[b,c]of dm)m.set(b,(m.get(b)||0)+c);return m}
+
+const FORMATS={plain:["One domain per line",d=>d.join("\n")],ublock:["uBlock Origin / AdGuard filters",d=>d.map(x=>`||${x}^`).join("\n")],hosts:["hosts file",d=>d.flatMap(x=>[`0.0.0.0 ${x}`,`0.0.0.0 www.${x}`]).join("\n")],
+  wildcard:["Wildcards (*.site.com)",d=>d.map(x=>`*.${x}`).join("\n")],policy:["Chrome policy JSON (URLBlocklist / URLAllowlist)",d=>JSON.stringify(d,null,2)],urls:["Full https:// links",d=>d.map(x=>`https://${x}/`).join("\n")],csv:["Comma-separated",d=>d.join(", ")]};
+function vLists(){const f=LS.get("fmt","plain");
+  const box=(w,title)=>`<div class="panel" style="padding-bottom:16px"><h2 style="margin-top:6px">${title} · ${lists[w].length}</h2>
+  <textarea data-list="${w}" spellcheck="false" placeholder="One domain per line. Add sites from Sites or Habits, or paste here.">${esc(lists[w].join("\n"))}</textarea>
+  <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn pri" data-act="copylist" data-w="${w}">Copy</button><button class="btn" data-act="dllist" data-w="${w}">Download</button><button class="btn" data-act="clearlist" data-w="${w}">Clear</button></div></div>`;
+  return `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px"><span>Format</span><select id="fmt">${Object.entries(FORMATS).map(([k,[l]])=>`<option value="${k}" ${k===f?"selected":""}>${esc(l)}</option>`).join("")}</select>
+  <span class="muted small">${API?"Saved to your account and synced across your devices.":"Saved in this browser."} Paste into a blocker extension, your router, or Chrome's URLBlocklist policy.</span></div>
+  <div class="lists">${box("block","Block list")}${box("allow","Allow list")}</div>`}
+
+/* ---------- render ---------- */
+function render(){
+  $("#tabs").innerHTML=TABS.map(([k,l])=>`<button class="${S.tab===k?"on":""}" data-act="tab" data-k="${k}">${l}</button>`).join("");
+  $("#custom").style.display=S.range==="custom"?"inline":"none";
+  $("#grp").checked=S.group==="base";
+  const v={overview:vOverview,sites:vSites,searches:vSearches,pages:vPages,habits:vHabits,lists:vLists}[S.tab]||vOverview;
+  $("#main").innerHTML=v()+actionBar();
+}
+function actionBar(){const v=S.tab;if(!sel[v]||!sel[v].size)return "";const n=sel[v].size,clr=`<span style="flex:1"></span><button class="link" data-act="clearsel">Clear</button>`;
+  if(v==="sites")return `<div class="actions show"><b>${n} selected</b><button class="btn pri" data-act="copysel" data-f="plain">Copy domains</button><button class="btn" data-act="copysel" data-f="urls">Copy links</button><button class="btn" data-act="copysel" data-f="allpages">Copy every page</button><button class="btn" data-act="copysel" data-f="ublock">Copy uBlock rules</button><button class="btn" data-act="addsel" data-w="block">Add to block list</button><button class="btn" data-act="addsel" data-w="allow">Add to allow list</button>${clr}</div>`;
+  if(v==="pages")return `<div class="actions show"><b>${n} selected</b><button class="btn pri" data-act="copysel" data-f="urls">Copy links</button><button class="btn" data-act="copysel" data-f="md">Copy Markdown</button><button class="btn" data-act="copysel" data-f="tsv">Copy title + link</button><button class="btn" data-act="copysel" data-f="domains">Copy domains</button>${clr}</div>`;
+  if(v==="searches")return `<div class="actions show"><b>${n} selected</b><button class="btn pri" data-act="copysel" data-f="terms">Copy searches</button><button class="btn" data-act="copysel" data-f="urls">Copy result links</button>${clr}</div>`;
+  return ""}
+
+/* ---------- copy, toast, modal ---------- */
+async function copy(text,n,label){
+  try{await navigator.clipboard.writeText(text)}catch{const ta=document.createElement("textarea");ta.value=text;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,text.length);document.execCommand("copy");ta.remove()}
+  toast(`Copied ${fmt(n)} ${label}`)}
+let tt;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),1800)}
+function surprise(){const now=Date.now()/1000;let pool=[...C.pages.values()].filter(p=>p.visits<=2&&U[p.u][1]&&now-p.last>86400*3&&!/login|signin|auth|oauth|account|checkout|callback/i.test(U[p.u][0]));
+  if(!pool.length)pool=[...C.pages.values()];if(!pool.length)return;const p=pool[Math.floor(Math.random()*pool.length)],h=urlHost[p.u];
+  $("#mbody").innerHTML=`<div class="muted small">A page you visited ${ago(p.last)}</div><h2 style="font-size:18px;margin:6px 0">${esc(U[p.u][1]||U[p.u][0])}</h2><div class="muted" style="display:flex;gap:8px;align-items:center">${ico(h,H[h])}${esc(H[h])}</div>
+  <div style="display:flex;gap:8px;margin-top:18px"><a class="btn pri" href="${esc(U[p.u][0])}" target="_blank" rel="noreferrer noopener">Open</a><button class="btn" data-act="surprise">Another</button><button class="btn" data-act="mclose">Close</button></div>`;
+  $("#modal").classList.add("show")}
+function download(name,text){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"text/plain"}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+const md=u=>`- [${(U[u][1]||U[u][0]).replace(/[\[\]]/g,"")}](${U[u][0]})`;
+
+/* ---------- events ---------- */
+function refresh(){compute();render()}
+function goTab(t){S.tab=t;LS.set("tab",t);render();scrollTo(0,0)}
+document.addEventListener("click",ev=>{
+  const el=ev.target.closest("[data-act]");if(!el)return;const a=el.dataset.act,k=el.dataset.k,v=el.dataset.v;
+  if(a==="gosite"||a==="tab")ev.preventDefault();
+  if(a==="tab"){S.q="";$("#q").value="";goTab(k)}
+  else if(a==="metric"){S.metric=k;render()}
+  else if(a==="sort"){const s=S.sort[v];if(s[0]===k)s[1]*=-1;else{s[0]=k;s[1]=k==="name"?1:-1}render()}
+  else if(a==="sel"){const key=v==="pages"?+k:k;el.checked?sel[v].add(key):sel[v].delete(key);render()}
+  else if(a==="selall"){const rows=(v==="sites"?C.siteRows:v==="pages"?C.pageRows:C.searchRows).slice(0,S.limit[v]),keyOf=r=>v==="pages"?r.u:r.k;rows.forEach(r=>el.checked?sel[v].add(keyOf(r)):sel[v].delete(keyOf(r)));render()}
+  else if(a==="clearsel"){sel[S.tab].clear();render()}
+  else if(a==="more"){S.limit[v]+=500;render()}
+  else if(a==="open"){S.open=S.open===k?null:k;render()}
+  else if(a==="close"){S.open=null;render()}
+  else if(a==="site"||a==="gosite"){if(a==="gosite"&&S.group==="host"){S.group="base";LS.set("group","base");compute()}S.q=k;$("#q").value=k;S.open=k;goTab("sites")}
+  else if(a==="page"){window.open(U[+k][0],"_blank","noopener,noreferrer")}
+  else if(a==="eng"){const i=D.engines.indexOf(k);S.eng=(i<0||S.eng===i)?-1:i;S.tab="searches";render()}
+  else if(a==="q"){S.q=k;$("#q").value=k;render()}
+  else if(a==="opensearch"){S.q=k;$("#q").value=k;goTab("searches")}
+  else if(a==="mark"){const w=el.dataset.w,cur=listState(k);setList([k],cur===w?"":w);toast(cur===w?`Removed ${k} from ${w} list`:`Added ${k} to ${w} list`);render()}
+  else if(a==="addsel"){const ks=[...sel.sites];setList(ks,el.dataset.w);toast(`Added ${ks.length} to ${el.dataset.w} list`);render()}
+  else if(a==="blockall"){const ks=C.hab.filter(h=>!dismissed.has(h.k)&&h.level>=3&&!lists.block.includes(h.k)).map(h=>h.k);setList(ks,"block");toast(`Added ${ks.length} sites to block list`);render()}
+  else if(a==="dismiss"){dismissed.add(k);saveDismissed();render()}
+  else if(a==="undismiss"){dismissed.clear();saveDismissed();render()}
+  else if(a==="copysel"){const f=el.dataset.f,s=[...sel[S.tab]];
+    if(S.tab==="sites"){if(f==="allpages"){const urls=s.flatMap(k=>sitePages(k).map(p=>U[p.u][0]));return copy(urls.join("\n"),urls.length,"links")}return copy(FORMATS[f][1](s),s.length,f==="plain"?"domains":"lines")}
+    if(S.tab==="pages"){if(f==="domains"){const ds=[...new Set(s.map(u=>H[urlHost[u]]))];return copy(ds.join("\n"),ds.length,"domains")}
+      return copy(s.map(u=>f==="md"?md(u):f==="tsv"?`${U[u][1]}\t${U[u][0]}`:U[u][0]).join("\n"),s.length,"links")}
+    const m=C.searches;if(f==="terms")return copy(s.map(k=>m.get(k)?.term??k).join("\n"),s.length,"searches");
+    const urls=s.map(k=>m.get(k)?U[m.get(k).u][0]:"").filter(Boolean);copy(urls.join("\n"),urls.length,"links")}
+  else if(a==="copysitepages"){const ps=sitePages(k);copy(ps.map(p=>el.dataset.f==="md"?md(p.u):U[p.u][0]).join("\n"),ps.length,"links")}
+  else if(a==="copylist"){const w=el.dataset.w,f=LS.get("fmt","plain");copy(FORMATS[f][1](lists[w]),lists[w].length,"domains")}
+  else if(a==="dllist"){const w=el.dataset.w,f=LS.get("fmt","plain");download(`${w}list-${f}.${f==="policy"?"json":"txt"}`,FORMATS[f][1](lists[w]))}
+  else if(a==="clearlist"){if(confirm(`Clear your ${el.dataset.w} list?`)){lists[el.dataset.w]=[];saveLists();render()}}
+  else if(a==="surprise")surprise();
+  else if(a==="mclose")$("#modal").classList.remove("show");
+});
+$("#modal").addEventListener("click",e=>{if(e.target.id==="modal")$("#modal").classList.remove("show")});
+document.addEventListener("input",e=>{
+  if(e.target.dataset.list){const w=e.target.dataset.list;lists[w]=[...new Set(e.target.value.split(/[\s,]+/).map(x=>x.trim().toLowerCase().replace(/^https?:\/\//,"").replace(/^www\./,"").replace(/\/.*$/,"").replace(/^\|\||\^$/g,"")).filter(Boolean))];saveLists()}});
+document.addEventListener("change",e=>{if(e.target.id==="fmt"){LS.set("fmt",e.target.value);render()}if(e.target.dataset.list)render()});
+let qt;$("#q").addEventListener("input",e=>{clearTimeout(qt);qt=setTimeout(()=>{S.q=e.target.value.trim();S.limit={sites:300,pages:300,searches:300};if(S.q&&(S.tab==="overview"||S.tab==="lists"))S.tab="sites";render()},120)});
+$("#surprise").onclick=surprise;
+$("#grp").onchange=e=>{S.group=e.target.checked?"base":"host";LS.set("group",S.group);sel.sites.clear();S.open=null;refresh()};
+$("#range").innerHTML=RANGES.map(([k,l])=>`<option value="${k}" ${S.range===k?"selected":""}>${l}</option>`).join("");
+$("#range").onchange=e=>{S.range=e.target.value;if(S.range!=="custom")LS.set("range",S.range);refresh()};
+$("#dev").innerHTML=`<option value="-1">All devices</option>`+D.devices.map((d,i)=>`<option value="${i}">${esc(d.name)}</option>`).join("");
+$("#dev").onchange=e=>{S.dev=+e.target.value;refresh()};
+if(D.profiles.length>1)$("#prof").innerHTML=`<option value="-1">All profiles</option>`+D.profiles.map((p,i)=>`<option value="${i}">${esc(p)}</option>`).join("");else $("#prof").style.display="none";
+$("#prof").onchange=e=>{S.prof=+e.target.value;refresh()};
+$("#from").onchange=e=>{S.from=e.target.value;refresh()};$("#to").onchange=e=>{S.to=e.target.value;refresh()};
+$("#gen").textContent=`Updated ${ago(D.generated)} · ${fmt(NV)} visits since ${NV?new Date(V.t[0]*1000).toLocaleDateString():"–"}`;
+document.addEventListener("keydown",e=>{const tag=e.target.tagName;if(e.key==="Escape"){$("#modal").classList.remove("show");if(tag==="INPUT")e.target.blur();return}
+  if(tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT"||e.ctrlKey||e.metaKey||e.altKey)return;
+  if(e.key==="/"){e.preventDefault();$("#q").focus()}else if(/^[1-6]$/.test(e.key))goTab(TABS[+e.key-1][0])});
+$("#rebuild").style.display="";$("#rebuild").textContent="Settings";$("#rebuild").onclick=()=>location.href="/settings.html";
+refresh();pullServer();
+</script>
+</body>
+</html>

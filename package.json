@@ -1,0 +1,21 @@
+{
+  "name": "history-explorer",
+  "version": "1.0.0",
+  "description": "Private Safari history dashboard",
+  "scripts": {
+    "dev": "wrangler dev",
+    "check": "tsc -p .",
+    "deploy": "wrangler deploy",
+    "db:local": "wrangler d1 migrations apply history-explorer --local"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261123.1",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.167.0"
+  },
+  "dependencies": {
+    "@simplewebauthn/server": "^14.1.0",
+    "fflate": "^0.8.3"
+  },
+  "private": true
+}

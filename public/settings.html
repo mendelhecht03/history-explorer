@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; script-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self'; manifest-src 'self'">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="History">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="stylesheet" href="/style.css">
+<title>Settings · History</title>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><a href="/" id="back">‹ Dashboard</a><button class="link" id="logout">Sign out</button></div>
+  <h1 id="hello">Settings</h1>
+  <p class="muted" id="status">Loading…</p>
+  <div class="card hidden" id="welcome"><b>Welcome!</b> Two steps get you going: turn on live sync below so new visits arrive as you browse, then upload one Safari export to bring in your past history.</div>
+  <div class="card hidden" id="recovered"><b>You're signed in with your recovery code.</b> Add a new passkey under <a href="#passkeys">Passkeys</a> so you can sign in normally next time.</div>
+
+  <h2 id="live">1 · Live sync on iPhone</h2>
+  <div class="card">
+    <ol>
+      <li>Install the free <a href="https://apps.apple.com/app/id1463298887" target="_blank" rel="noopener">Userscripts</a> app and open it once.</li>
+      <li>Go to <b>Settings › Apps › Safari › Extensions › Userscripts</b>, turn it on, and set <b>All Websites</b> to <b>Allow</b>. (Turn on <b>Allow in Private Browsing</b> too if you want those pages.)</li>
+      <li>On this iPhone, in Safari, tap the button below. On the page that opens, tap the extensions button in the address bar, choose <b>Userscripts</b>, then <b>Install</b>.</li>
+    </ol>
+    <input id="devname" placeholder="Device name, e.g. iPhone" value="iPhone" maxlength="40">
+    <button class="btn" id="mklink">Create install link</button>
+    <div class="err" id="e1"></div>
+    <div id="devices"></div>
+  </div>
+
+  <h2 id="import">2 · Upload a Safari export</h2>
+  <div class="card">
+    <p>Brings in everything Safari still remembers, and fills any gaps in live sync. Uploading again later is safe: duplicates are merged.</p>
+    <ol>
+      <li><b>Settings › Apps › Safari › Export</b>, choose <b>History</b> only, and save the file to Files.</li>
+      <li>Pick that file here:</li>
+    </ol>
+    <input type="file" id="file" accept=".zip,.json,application/zip,application/json">
+    <button class="btn" id="upload">Upload</button>
+    <div class="err" id="e2"></div>
+    <p class="ok small" id="upres"></p>
+  </div>
+
+  <h2>Weekly reminder (optional)</h2>
+  <div class="card">
+    <p>In the <b>Shortcuts</b> app: <b>Automation › New Automation › Time of Day</b>, pick <b>Weekly</b> (say Sunday 7 PM), choose <b>Run Immediately</b>, add the action <b>Open URLs</b> with this link:</p>
+    <span class="code" id="reminderUrl"></span>
+    <p class="muted small">It opens this page each week so you can upload a fresh export in under a minute.</p>
+  </div>
+
+  <h2 id="passkeys">Passkeys</h2>
+  <div class="card">
+    <p id="pkcount" class="muted"></p>
+    <button class="btn secondary" id="addpk">Add a passkey on this device</button>
+    <div class="err" id="e3"></div>
+  </div>
+
+  <h2>Your data</h2>
+  <div class="card">
+    <p class="small muted">We store each page's link (without tracking codes), title, and visit time, and nothing else. Uploaded files are read and thrown away. There are no ads or analytics.</p>
+    <button class="btn danger" id="delhist">Delete all my history</button>
+    <button class="btn danger" id="delacct">Delete my account</button>
+    <div class="err" id="e4"></div>
+  </div>
+</div>
+<script src="/passkey.js"></script>
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const when = (t) => (t ? new Date(t * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "never");
+const qs = new URLSearchParams(location.search);
+if (qs.has("welcome")) $("#welcome").classList.remove("hidden");
+if (qs.has("recovered")) $("#recovered").classList.remove("hidden");
+$("#reminderUrl").textContent = location.origin + "/settings.html#import";
+
+async function load() {
+  let me;
+  try { me = await api("/api/me", undefined, "GET"); } catch { location.href = "/login.html"; return; }
+  const s = me.stats;
+  $("#hello").textContent = `Hi, ${me.user.name}`;
+  $("#status").textContent = s.visits
+    ? `${Number(s.visits).toLocaleString()} visits since ${new Date(s.first * 1000).toLocaleDateString()}. Last live visit: ${when(s.last_live)}. Newest exported visit: ${when(s.last_export)}.`
+    : "No history yet.";
+  $("#back").classList.toggle("hidden", !s.visits);
+  $("#devices").innerHTML = me.devices.length
+    ? `<h2 style="margin-left:0">Connected devices</h2>` + me.devices.map((d) => `<div class="row"><div class="grow"><b>${esc(d.name)}</b><div class="muted small">Last sync: ${when(d.last_used)}</div></div><button class="link" data-rm="${esc(d.id)}">Remove</button></div>`).join("")
+    : "";
+  $("#pkcount").textContent = `${me.passkeys} passkey${me.passkeys === 1 ? "" : "s"} on this account.`;
+}
+
+async function run(btn, errEl, fn) {
+  errEl.textContent = ""; btn.disabled = true;
+  try { await fn(); } catch (e) { errEl.textContent = e.name === "NotAllowedError" ? "Cancelled." : e.message; } finally { btn.disabled = false; }
+}
+
+$("#mklink").onclick = () => run($("#mklink"), $("#e1"), async () => {
+  const r = await api("/api/tokens", { name: $("#devname").value });
+  location.href = r.installUrl;
+});
+$("#devices").onclick = async (e) => {
+  const id = e.target.dataset.rm;
+  if (!id || !confirm("Stop syncing from this device? Its past visits stay.")) return;
+  await api("/api/tokens/" + encodeURIComponent(id), undefined, "DELETE");
+  load();
+};
+$("#upload").onclick = () => run($("#upload"), $("#e2"), async () => {
+  const f = $("#file").files[0];
+  if (!f) throw new Error("Choose the export file first.");
+  $("#upres").textContent = "Uploading…";
+  try {
+    const r = await api("/api/import", f);
+    $("#upres").textContent = r.added
+      ? `Added ${r.added.toLocaleString()} visits${r.merged ? `, merged ${r.merged.toLocaleString()} live duplicates` : ""}.`
+      : "Nothing new in that file. You're up to date.";
+  } catch (e) { $("#upres").textContent = ""; throw e; }
+  load();
+});
+$("#addpk").onclick = () => run($("#addpk"), $("#e3"), async () => { await createPasskey(); load(); });
+$("#delhist").onclick = () => run($("#delhist"), $("#e4"), async () => {
+  if (!confirm("Delete all your history? This can't be undone.")) return;
+  await api("/api/history/delete", {}); load();
+});
+$("#delacct").onclick = () => run($("#delacct"), $("#e4"), async () => {
+  if (prompt('This deletes your account and all your history for good. Type DELETE to confirm.') !== "DELETE") return;
+  await api("/api/account/delete", {}); location.href = "/login.html";
+});
+$("#logout").onclick = async () => { await api("/api/auth/logout", {}); location.href = "/login.html"; };
+load();
+</script>
+</body>
+</html>

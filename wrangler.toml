@@ -1,0 +1,21 @@
+name = "history-explorer"
+main = "src/index.ts"
+compatibility_date = "2026-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = ["/api/*", "/", "/index.html", "/install/*"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "history-explorer"
+database_id = "REPLACE_AFTER_wrangler_d1_create"
+migrations_dir = "migrations"
+
+[vars]
+# Set these to the deployed origin, e.g. https://history.example.com
+ORIGIN = "http://localhost:8787"
+RP_ID = "localhost"
+RP_NAME = "History Explorer"
