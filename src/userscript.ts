@@ -59,7 +59,7 @@ export function userscript(origin: string, token: string): string {
       for (let i = 0; i < 20; i++) {
         const q = await load();
         if (!q.length) break;
-        const batch = q.slice(0, 200);
+        const batch = q.slice(0, 100);
         const res = await post(batch);
         if (res === "retry") break; // offline or server down: keep the queue and try on the next page
         const sent = new Set(batch.map((v) => v.t + " " + v.url));

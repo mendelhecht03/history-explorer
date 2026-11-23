@@ -3,6 +3,8 @@ CREATE TABLE users (
   id TEXT PRIMARY KEY,                 -- random, also the WebAuthn user handle
   name TEXT NOT NULL,                  -- display label only
   recovery_hash TEXT,                  -- SHA-256 of the one-time recovery code
+  export_through INTEGER,              -- newest visit time of the last fully uploaded Safari export
+  data_version INTEGER NOT NULL DEFAULT 1, -- bumped when visits are deleted, so browser caches resync
   created INTEGER NOT NULL
 );
 CREATE TABLE credentials (             -- passkeys
@@ -50,9 +52,11 @@ CREATE TABLE visits (
   source INTEGER NOT NULL,             -- 1 = live (userscript), 2 = Safari export
   device TEXT,                         -- token id for live visits
   private INTEGER NOT NULL DEFAULT 0,
+  added INTEGER NOT NULL,              -- when the server stored it; browsers sync by this
   PRIMARY KEY (user_id, url_id, t)
 ) WITHOUT ROWID;
 CREATE INDEX visits_user_t ON visits(user_id, t);
+CREATE INDEX visits_user_added ON visits(user_id, added, t, url_id);
 CREATE TABLE lists (
   user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
   data TEXT NOT NULL

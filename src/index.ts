@@ -1,6 +1,6 @@
 import * as auth from "./auth";
-import { dashboardData } from "./data";
-import { importExport, liveVisits } from "./ingest";
+import { syncUrls, syncVisits } from "./data";
+import { importBatch, importFinish, importState, liveVisits } from "./ingest";
 import { userscript } from "./userscript";
 import { Env, HttpError, json, now, randomId, sha256, text } from "./util";
 
@@ -11,15 +11,11 @@ async function handle(req: Request, env: Env): Promise<Response> {
   const path = url.pathname;
   const m = req.method;
 
-  // ---- dashboard page: the original template with this user's data inlined ----
+  // ---- dashboard page (data is fetched by the page itself) ----
   if (m === "GET" && (path === "/" || path === "/index.html")) {
     const ctx = await auth.identify(req, env);
     if (!ctx || ctx.via !== "session") return redirect("/login.html");
-    const data = await dashboardData(env, ctx.userId);
-    if (!data.v.t.length) return redirect("/settings.html?welcome=1");
-    const tpl = await (await env.ASSETS.fetch(new URL("/app.html", url))).text();
-    const blob = JSON.stringify(data).replace(/</g, "\\u003c").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
-    return text(tpl.replace("/*__DATA__*/null", () => blob), 200, "text/html; charset=utf-8");
+    return env.ASSETS.fetch(new URL("/app.html", url));
   }
 
   // ---- userscript install link (10 minutes, opened in Safari so Userscripts offers to install it) ----
@@ -57,19 +53,21 @@ async function handle(req: Request, env: Env): Promise<Response> {
     if (ctx.via !== "token") throw new HttpError(403, "Live visits need a device key");
     return liveVisits(req, env, ctx);
   }
-  if (m === "POST" && path === "/api/import") {
-    if (ctx.via === "session") auth.checkOrigin(req, env);
-    return importExport(req, env, ctx);
-  }
 
   // ---- everything else is for the signed-in browser only ----
   if (ctx.via !== "session") throw new HttpError(403, "Not allowed with a device key");
   auth.checkOrigin(req, env);
   const uid = ctx.userId;
 
+  if (m === "GET" && path === "/api/import/state") return importState(env, ctx);
+  if (m === "POST" && path === "/api/import/batch") return importBatch(req, env, ctx);
+  if (m === "POST" && path === "/api/import/finish") return importFinish(req, env, ctx);
+  if (m === "GET" && path === "/api/sync/urls") return json(await syncUrls(url, env, uid));
+  if (m === "GET" && path === "/api/sync/visits") return json(await syncVisits(url, env, uid));
+
   if (m === "GET" && path === "/api/me") {
     const [user, toks, stats, creds] = await env.DB.batch([
-      env.DB.prepare("SELECT name, created FROM users WHERE id = ?").bind(uid),
+      env.DB.prepare("SELECT id, name, created, data_version FROM users WHERE id = ?").bind(uid),
       env.DB.prepare("SELECT id, name, created, last_used FROM tokens WHERE user_id = ? ORDER BY created").bind(uid),
       env.DB.prepare(`SELECT COUNT(*) AS visits, MIN(t) AS first, MAX(t) AS last,
                       SUM(source = 1) AS live, SUM(source = 2) AS exported,
@@ -122,6 +120,7 @@ async function handle(req: Request, env: Env): Promise<Response> {
     await env.DB.batch([
       env.DB.prepare("DELETE FROM visits WHERE user_id = ?").bind(uid),
       env.DB.prepare("DELETE FROM urls WHERE user_id = ?").bind(uid),
+      env.DB.prepare("UPDATE users SET export_through = NULL, data_version = data_version + 1 WHERE id = ?").bind(uid),
     ]);
     return json({ ok: true });
   }
