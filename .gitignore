@@ -4,3 +4,5 @@ node_modules/
 # private browsing data - never commit
 *.zip
 History.json
+__pycache__/
+*.pyc
