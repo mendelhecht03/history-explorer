@@ -145,55 +145,154 @@ textarea{width:100%;min-height:260px;font-family:ui-monospace,Consolas,monospace
 #modal.show{display:grid}
 #modal .panel{width:min(480px,92vw)}
 
-.phone{display:none}
-/* ---------- phone: Screen Time-style grouped lists ---------- */
+.phone,.meter,.tbi{display:none}
+.gcell{display:flex;flex-direction:column;min-width:0}.gcell>.panel{flex:1}
+.nm .t{overflow:hidden;text-overflow:ellipsis}
+/* ---------- phone: modeled on iOS Screen Time (grouped inset lists, segmented range, tab bar) ---------- */
 @media (max-width:720px){
-  body{background:var(--sys);font-size:16px}
+  :root{--bg:#f2f2f7;--panel:#fff;--line:#c6c6c8;--accent:#007aff;--share:#007aff14;--muted:#6d6d72;--faint:#8e8e93;--green:#34c759}
+  @media (prefers-color-scheme:dark){:root{--bg:#000;--panel:#1c1c1e;--line:#38383a;--accent:#0a84ff;--share:#0a84ff24;--muted:#8d8d93;--faint:#636366;--empty:#2c2c2e;--green:#30d158}}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);font-size:17px;line-height:1.35;-webkit-tap-highlight-color:transparent}
+  a:hover{text-decoration:none}
   .wrap{padding:0 16px}
-  header{padding:calc(env(safe-area-inset-top) + 12px) 0 0}
-  .brand{font-size:28px;font-weight:700;letter-spacing:-.5px;width:100%}
-  #q{width:100%;order:9;border-radius:10px;padding:8px 12px;background:var(--panel);border:0}
-  .filters{width:100%}
-  .filters select{flex:1;border:0;border-radius:10px;padding:8px;background:var(--panel)}
   .desk{display:none!important}.phone{display:block}
-  nav{position:fixed;left:0;right:0;bottom:0;z-index:30;margin:0;gap:0;justify-content:space-around;background:color-mix(in srgb,var(--panel) 92%,transparent);backdrop-filter:blur(16px);border-top:1px solid var(--line);border-bottom:0;padding-bottom:env(safe-area-inset-bottom)}
-  nav button{flex:1;font-size:11px;padding:10px 0 8px;border:0;margin:0}
+  header{display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top) + 10px) 0 0}
+  .ptop{display:flex;align-items:center;gap:6px;order:1;min-height:52px}
+  .ptop h1{font-size:34px;font-weight:700;letter-spacing:.2px;margin:0;flex:1}
+  .ibtn{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--accent);background:var(--panel)}
+  .ibtn svg{width:20px;height:20px}
+  .seg{order:2;display:flex;background:#7676801f;border-radius:9px;padding:2px;margin:8px 0 4px}
+  .seg button{flex:1;font-size:13px;font-weight:600;padding:6px 0;border-radius:7px;color:var(--text)}
+  .seg button.on{background:var(--panel);box-shadow:0 3px 8px #0000001f,0 3px 1px #0000000a}
+  @media (prefers-color-scheme:dark){.seg{background:#7676803d}.seg button.on{background:#636366}}
+  .top:not(.desk){order:3}
+  .tab-lists .seg{display:none}
+  .brand,#range,#dev,#prof,#custom{display:none!important}
+  .filters{width:100%}
+  #q{display:none;width:100%;border:0;border-radius:10px;padding:8px 12px 8px 34px;background:#7676801f url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%238e8e93' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='7' cy='7' r='5.2'/%3E%3Cpath d='m11 11 3.6 3.6'/%3E%3C/svg%3E") no-repeat 11px 50%;margin:8px 0 0;font-size:17px}
+  .tab-sites #q,.tab-pages #q,.tab-searches #q,.tab-habits #q{display:block}
+  nav{position:fixed;left:0;right:0;bottom:0;z-index:30;margin:0;gap:0;justify-content:space-around;background:color-mix(in srgb,var(--panel) 85%,transparent);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--line);border-bottom:0;padding:0 4px env(safe-area-inset-bottom)}
+  nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:500;padding:7px 0 5px;border:0;margin:0;color:var(--faint)}
+  nav .tbi{display:block;width:25px;height:25px}
   nav button.on{color:var(--accent)}
-  main{padding:18px 0 110px}
-  .panel{border:0;border-radius:12px;padding:4px 16px}
-  .panel h2{margin:12px 0 4px}
-  .sect{font-size:13px;text-transform:uppercase;color:var(--muted);margin:22px 4px 6px;letter-spacing:.02em}
-  .grid2,.lists{grid-template-columns:1fr;gap:0}
-  .grid2>.panel{margin-top:22px}
-  .lr{margin:0;padding:10px 0;border-bottom:.5px solid var(--line);border-radius:0;min-height:44px}
+  main{padding:14px 0 calc(96px + env(safe-area-inset-bottom))}
+  .muted{color:var(--muted)}
+  .panel{border:0;border-radius:12px;padding:0 16px}
+  .panel h2{font-size:17px;margin:0;padding:12px 0 8px}
+  .sect,.panel .sect{display:flex;align-items:baseline;font-size:13px;font-weight:400;text-transform:uppercase;color:var(--muted);margin:26px 16px 7px;letter-spacing:0}
+  .sect .link{margin-left:auto;text-transform:none;font-size:15px;color:var(--accent)}
+  .grid2,.lists{grid-template-columns:minmax(0,1fr);gap:0}
+  .grid2>.panel,.grid2>div{margin-top:0}
+  .lists>.panel{margin-bottom:20px}
+  /* rows: icon, name with a thin usage bar under it, value, chevron */
+  .lr{margin:0;padding:10px 0;gap:12px;border-bottom:.5px solid var(--line);border-radius:0;min-height:48px}
   .lr:last-child{border-bottom:0}
-  .lr .bar{display:none}
-  .ico{width:24px;height:24px;border-radius:6px;font-size:12px}
-  .lh{display:none}
-  .big{padding:14px 0}
-  .big .l{font-size:13px;color:var(--muted)}
-  .big .n{font-size:34px;font-weight:700;letter-spacing:-.8px}
-  .kpis{display:none}
-  .chart{display:none}
+  .lr .bar,.lh{display:none}
+  .lr .nm{display:flex;flex-direction:column;gap:5px;white-space:normal}
+  .nm .t,.nmt .t{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .meter{display:block;height:4px;border-radius:2px;background:var(--empty);overflow:hidden}
+  .meter i{display:block;height:100%;border-radius:2px;background:var(--accent)}
+  .lr .v{color:var(--muted);font-weight:400}
+  .lr[data-act]:after,.chev:after{content:"";width:8px;height:8px;border:solid var(--faint);border-width:2px 2px 0 0;transform:rotate(45deg);margin:0 2px 0 -4px;flex:none;opacity:.7}
+  .lr[data-act]:hover .nm{text-decoration:none}
+  .lr .sub{display:none}
+  .sub2{font-size:13px;color:var(--muted)}
+  .ico{width:29px;height:29px;border-radius:7px;font-size:14px}
+  .lr .ico,.nmcell .ico{align-self:center}
+  /* Screen Time hero card */
+  .hero{padding:14px 16px 10px}
+  .hero .l{font-size:15px;color:var(--muted)}
+  .hero .n{font-size:34px;font-weight:700;letter-spacing:.3px;line-height:1.15}
+  .hero .n small{font-size:20px;font-weight:600;color:var(--muted);margin-left:4px}
+  .hero .c{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:4px}
+  .pchart svg{display:block;width:100%;height:auto;margin-top:8px;overflow:visible}
+  .pchart text{fill:var(--faint);font-size:10px}
+  .pchart .gl{stroke:var(--line);stroke-width:.5}
+  .pchart .avg{stroke:var(--green);stroke-width:1.2;stroke-dasharray:3 3}
+  .pchart .avgt{fill:var(--green);font-weight:600}
+  .keys{gap:6px 14px;font-size:12px;padding:10px 0 4px}
+  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+  .tile{background:var(--panel);border-radius:12px;padding:11px 14px;text-align:left}
+  .tile .l{font-size:13px;color:var(--muted)}
+  .tile .n{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+  .tile .c{font-size:12px;margin-left:4px;font-weight:500}
+  .kpis,.chart{display:none}
+  .cal{direction:ltr;padding:4px 0}
+  .cal i{width:13px;height:13px;border-radius:3px}.cal .ml{width:13px}
+  .legend{padding-bottom:12px}
+  .hl{flex-direction:column;align-items:flex-start;gap:1px}
+  .hl .nm{font-size:13px}.hl .v{color:var(--text)!important;font-weight:500}
   /* tables become grouped lists */
-  .tablewrap{background:var(--panel);border-radius:12px;padding:0 12px}
+  .lhead{display:flex;align-items:center;margin:4px 4px 8px!important;font-size:13px!important}
+  .lhead .link{margin-left:auto;font-size:15px;color:var(--accent)}
+  .tablewrap{background:var(--panel);border-radius:12px;padding:0 0 0 16px}
   thead{display:none}
   table,tbody{display:block}
-  tr{display:flex;align-items:center;gap:10px;border-bottom:.5px solid var(--line);padding:9px 0}
+  tr{display:flex;align-items:center;gap:12px;border-bottom:.5px solid var(--line);padding:9px 16px 9px 0;min-height:52px}
   tr:last-child{border-bottom:0}
   td{border:0;padding:0}
-  td.hidem{display:none}
+  td.hidem,td.stc,.cat,.nmcell .bar{display:none}
   td.nmcell{flex:1;min-width:0}
-  .nmcell .bar{display:none}
-  .cat{display:none}
+  .nmcell .in{gap:12px}
+  .nmt{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}
+  .nmcell .in>span.nmt{overflow:visible}
+  td.num{color:var(--muted)}
+  td.chev{display:flex}
+  td.ck{display:none}
+  .selmode td.ck{display:block}
+  tr.sel td{background:none}
   tr.detail{display:block}
-  input[type=checkbox]{width:20px;height:20px}
-  .actions{position:fixed;left:12px;right:12px;bottom:calc(64px + env(safe-area-inset-bottom));border-radius:12px}
-  .actions .btn{flex:1 1 45%;padding:9px}
-  .headline{font-size:20px}
-  .hrow{grid-template-columns:28px 1fr auto;padding:12px 0}
-  .hrow .acts{grid-column:2/4}
+  input[type=checkbox]{width:22px;height:22px;accent-color:var(--accent)}
+  .more{font-size:17px;padding:12px}
+  .chips{flex-wrap:nowrap;overflow-x:auto;margin:20px -16px 4px;padding:0 16px;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chips .muted{display:none}
+  .chip{white-space:nowrap;font-size:15px;padding:6px 14px;border:0;background:var(--panel);color:var(--text)}
+  .chip.on{background:var(--accent);color:#fff}
+  .actions{position:fixed;left:10px;right:10px;bottom:calc(62px + env(safe-area-inset-bottom));border:0;border-radius:14px;padding:10px;box-shadow:0 8px 30px #0003}
+  .actions .btn{flex:1 1 45%;padding:10px;font-size:15px;border-radius:10px}
+  .btn{border-radius:10px;padding:9px 14px;font-size:15px}
+  .btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+  /* habits */
+  .hcard{background:var(--panel);border-radius:12px;padding:16px}
+  .headline{font-size:20px;letter-spacing:0}
+  .scale{height:12px;border-radius:6px}
+  .hrows{padding:0 16px}
+  .hrow{grid-template-columns:29px 1fr auto;gap:4px 12px;padding:12px 0;border-bottom:.5px solid var(--line)}
+  .hrow:last-child{border-bottom:0}
+  .hrow .acts{grid-column:2/4;gap:8px;margin-top:6px}
+  .hrow .why{font-size:13px}
+  .st{font-size:14px;padding:5px 12px;border-radius:999px;background:#7676801f;color:var(--text)}
+  .stack svg{height:150px}
+  .habhead{flex-direction:column;align-items:stretch!important}
+  .habhead .btn{width:100%}
   .ttl{max-width:none}
+  textarea{font-size:15px;min-height:200px}
+  #fmt{width:100%;max-width:100%;border:0;border-radius:10px;padding:10px 12px}
+  select{font-size:16px}
+  #toast{bottom:calc(72px + env(safe-area-inset-bottom));border-radius:12px}
+  /* bottom sheet */
+  #modal{place-items:end stretch;background:#0000;transition:background .25s}
+  #modal.show{background:#0006}
+  #modal .panel{width:100%;max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg);border-radius:14px 14px 0 0;padding:6px 16px calc(24px + env(safe-area-inset-bottom));animation:up .28s cubic-bezier(.2,.8,.2,1)}
+  @keyframes up{from{transform:translateY(100%)}}
+  .grab{width:36px;height:5px;border-radius:3px;background:var(--faint);opacity:.5;margin:0 auto 10px}
+  .sh-h{display:flex;align-items:center;gap:12px;padding:4px 0 6px}
+  .sh-h .ico{width:44px;height:44px;border-radius:10px;font-size:20px}
+  .sh-t{font-size:22px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .xbtn{color:var(--accent);font-weight:600;font-size:17px;padding:6px 2px}
+  .group{background:var(--panel);border-radius:12px;padding:0 16px}
+  .group .lr{width:100%;text-align:left}
+  .group select,.group input[type=date]{border:0;background:none;color:var(--muted);text-align:right;padding:4px 0;max-width:55%}
+  .segbtns{display:flex;gap:10px;margin-top:14px}
+  .segbtns button{flex:1;padding:11px;border-radius:12px;background:var(--panel);font-weight:600;color:var(--accent)}
+  .segbtns .on.block{background:var(--vd);color:#fff}.segbtns .on.allow{background:var(--vp);color:#fff}
+  .sheet-acts{display:flex;gap:10px;margin-top:16px}.sheet-acts .btn{flex:1}
+  .sw{appearance:none;-webkit-appearance:none;width:51px!important;height:31px!important;border-radius:16px;background:#78788029;border:0;position:relative;transition:background .2s;flex:none;margin:0}
+  .sw:checked{background:var(--green)}
+  .sw:after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 3px 8px #00000026;transition:transform .2s}
+  .sw:checked:after{transform:translateX(20px)}
 }
 </style>
 </head>
@@ -201,7 +300,7 @@ textarea{width:100%;min-height:260px;font-family:ui-monospace,Consolas,monospace
 <div class="wrap">
 <header>
   <div class="top">
-    <span class="brand">History</span><a class="link phone" href="/settings.html" style="margin-left:auto;margin-right:8px">Settings</a>
+    <span class="brand">History</span>
     <div class="filters">
       <input id="q" placeholder="Filter" autocomplete="off">
       <select id="range"></select>
@@ -216,6 +315,10 @@ textarea{width:100%;min-height:260px;font-family:ui-monospace,Consolas,monospace
     <button class="link" id="rebuild" style="display:none">Refresh data</button>
     <span class="link" id="gen" style="margin-left:auto"></span>
   </div>
+  <div class="ptop phone"><h1 id="ptitle">History</h1>
+    <button class="ibtn" data-act="filters" aria-label="Filters"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
+    <a class="ibtn" href="/settings.html" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a></div>
+  <div class="seg phone" id="seg"></div>
   <nav id="tabs"></nav>
 </header>
 <main id="main"></main>
@@ -281,6 +384,14 @@ const listState=k=>lists.block.includes(k)?"block":lists.allow.includes(k)?"allo
 function setList(keys,which){for(const k of keys){lists.block=lists.block.filter(x=>x!==k);lists.allow=lists.allow.filter(x=>x!==k);if(which)lists[which].push(k)}lists.block.sort();lists.allow.sort();saveLists()}
 
 const TABS=[["overview","Overview"],["sites","Sites"],["searches","Searches"],["pages","Pages"],["habits","Habits"],["lists","Lists"]];
+const TAB_ICONS={overview:'<rect x="4" y="12" width="3.5" height="8" rx="1"/><rect x="10.25" y="7" width="3.5" height="13" rx="1"/><rect x="16.5" y="4" width="3.5" height="16" rx="1"/>',
+  sites:'<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 3.5 5.5 3.5 8.5s-1 5.9-3.5 8.5c-2.5-2.6-3.5-5.5-3.5-8.5s1-5.9 3.5-8.5z"/>',
+  searches:'<circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/>',
+  pages:'<path d="M6 3.5h8l4.5 4.5v12.5H6z"/><path d="M14 3.5V8h4.5M9 12.5h6M9 16h6"/>',
+  habits:'<path d="M7 3.5h10M7 20.5h10M8 3.5c0 4.5 8 5 8 8.5s-8 4-8 8.5M16 3.5c0 4.5-8 5-8 8.5s8 4 8 8.5"/>',
+  lists:'<path d="M9 6.5h11M9 12h11M9 17.5h11"/><path d="m3.5 6.5 1.3 1.3 2.2-2.6M3.5 12l1.3 1.3L7 10.7M3.5 17.5l1.3 1.3L7 16.2"/>'};
+const SEG=[["today","Today"],["7","7D"],["30","30D"],["90","90D"],["all","All"]];
+const isPhone=()=>matchMedia("(max-width:720px)").matches;
 const RANGES=[["today","Today"],["7","Last 7 days"],["30","Last 30 days"],["90","Last 90 days"],["all","All time"],["custom","Custom…"]];
 
 /* ---------- filtering & aggregation ---------- */
@@ -355,9 +466,9 @@ function habits(){
 function change(cur,prev,invert){if(prev==null||!C.prev||!prev)return"";const p=Math.round((cur-prev)/prev*100);if(!p)return `<span class="c muted">0%</span>`;
   const good=invert?p<0:p>0;return `<span class="c ${good?"up":"down"}">${p>0?"↑":"↓"} ${Math.abs(p)}%</span>`}
 // rows: {label, icon, value, show, act, k, sub}
-function list(rows,{title,col="Visits",empty="Nothing here yet."}={}){
+function list(rows,{title,col="Visits",empty="Nothing here yet.",cls=""}={}){
   if(!rows.length)return `<div class="empty">${empty}</div>`;const mx=Math.max(...rows.map(r=>r.value),1);
-  return `<div class="lh"><span>${title||""}</span><span>${col}</span></div>${rows.map(r=>`<div class="lr" ${r.act?`data-act="${r.act}" data-k="${esc(r.k??r.label)}"`:""}><span class="bar" style="width:${(r.value/mx*100).toFixed(1)}%"></span>${r.icon??""}<span class="nm">${esc(r.label)}${r.sub?`<span class="sub">${esc(r.sub)}</span>`:""}</span><span class="v">${r.show??fmt(r.value)}</span></div>`).join("")}`}
+  return `<div class="lh"><span>${title||""}</span><span>${col}</span></div>${rows.map(r=>`<div class="lr ${cls}" ${r.act?`data-act="${r.act}" data-k="${esc(r.k??r.label)}"`:""}><span class="bar" style="width:${(r.value/mx*100).toFixed(1)}%"></span>${r.icon??""}<span class="nm"><span class="t">${esc(r.label)}${r.sub?`<span class="sub">${esc(r.sub)}</span>`:""}</span><span class="meter"><i style="width:${(r.value/mx*100).toFixed(1)}%${r.color?`;background:${r.color}`:""}"></i></span></span><span class="v">${r.show??fmt(r.value)}</span></div>`).join("")}`}
 function dayRange(){const d0=dayOf(C.t0),d1=Math.max(dayOf(C.t1),dayOf(Date.now()/1000));const [a]=rng();return[a>0?Math.min(d0,dayOf(a)):d0,d1]}
 function lineChart(){
   const [d0,d1]=dayRange(),n=d1-d0+1,src=S.metric==="searches"?C.daySearch:S.metric==="time"?C.dayDur:C.days;
@@ -403,20 +514,39 @@ function vOverview(){
   <div class="kpis">${kpis.map(([m,l,n,c])=>`<button class="kpi ${m&&S.metric===m?"sel":""}" ${m?`data-act="metric" data-k="${m}"`:""}><div class="l">${l}</div><div class="n">${n}${c}</div></button>`).join("")}</div>
   <div class="panel desk">${lineChart()}</div>
   <div class="phone">
-    <div class="panel big"><div class="l">Daily average</div><div class="n">${fmt(perDay)} visits</div>${C.prev?`<div class="small muted">${changeText(C.vis.length,P.visits)} from the previous period</div>`:""}
-      ${stackChart(7)}<div class="keys" style="padding:8px 0 12px">${LV.map(([n,c])=>`<span><i style="background:${c}"></i>${n}</span>`).join("")}</div></div>
-    ${dist.n?`<div class="sect">Distracting</div><div class="panel" data-act="tab" data-k="habits"><div class="lr"><span class="nm">${dist.pct}% of visits went to distracting sites</span><span class="muted">›</span></div></div>`:""}
+    ${phoneHero(perDay)}
+    <div class="tiles">${kpis.filter(k=>k[1]!=="Time open"||totalDur).slice(0,4).map(([,l,n,c])=>`<div class="tile"><div class="l">${l}</div><div class="n">${n}${c}</div></div>`).join("")}</div>
+    ${dist.n?`<div class="sect">Distracting</div><div class="panel"><div class="lr" data-act="tab" data-k="habits"><span class="nm"><span class="t">${dist.pct}% of visits went to distracting sites</span><span class="meter"><i style="width:${dist.pct}%;background:var(--d)"></i></span></span></div></div>`:""}
   </div>
   <div class="grid2">
-    <div class="panel"><div class="sect phone" style="margin:8px 0 0">Most visited</div>${list(sites.slice(0,10).map(s=>({label:s.k,icon:ico(s.icon,s.k),value:s.visits,act:"site"})),{title:"Site"})}</div>
-    <div class="panel"><div class="sect phone" style="margin:8px 0 0">Searches</div>${list(tops.map(s=>({label:s.term,value:s.count,act:"opensearch",k:s.k})),{title:"Search",col:"Times",empty:"No searches in this period."})}</div>
-    <div class="panel"><div class="sect phone" style="margin:8px 0 0">Top pages</div>${list(pages.map(p=>({label:U[p.u][1]||U[p.u][0],icon:ico(urlHost[p.u],H[urlHost[p.u]]),value:p.visits,act:"page",k:String(p.u)})),{title:"Page"})}</div>
-    <div class="panel"><div class="sect phone" style="margin:8px 0 0">Devices</div>${list(devs.map(([d,v])=>({label:devName(d),value:v,show:`${fmt(v)} <span class="muted small">${Math.round(v/C.vis.length*100)}%</span>`})),{title:"Device"})}</div>
+    <div class="gcell"><div class="sect phone">Most used<button class="link" data-act="tab" data-k="sites">Show all</button></div><div class="panel">${list(sites.slice(0,10).map(s=>({label:s.k,icon:ico(s.icon,s.k),value:s.visits,act:"site",color:LV[lvOfBase(baseOf(s.k))][1]})),{title:"Site"})}</div></div>
+    <div class="gcell"><div class="sect phone">Searches<button class="link" data-act="tab" data-k="searches">Show all</button></div><div class="panel">${list(tops.map(s=>({label:s.term,value:s.count,act:"opensearch",k:s.k})),{title:"Search",col:"Times",empty:"No searches in this period."})}</div></div>
+    <div class="gcell"><div class="sect phone">Top pages<button class="link" data-act="tab" data-k="pages">Show all</button></div><div class="panel">${list(pages.map(p=>({label:U[p.u][1]||U[p.u][0],icon:ico(urlHost[p.u],H[urlHost[p.u]]),value:p.visits,act:"page",k:String(p.u)})),{title:"Page"})}</div></div>
+    <div class="gcell"><div class="sect phone">Devices</div><div class="panel">${list(devs.map(([d,v])=>({label:devName(d),value:v,show:`${fmt(v)} <span class="muted small">${Math.round(v/C.vis.length*100)}%</span>`})),{title:"Device"})}</div></div>
   </div>
-  <div class="panel" style="margin-top:20px"><h2>Activity</h2>${calendar()}</div>
+  <div class="sect phone">Activity</div>
+  <div class="panel" style="margin-top:20px"><h2 class="desk">Activity</h2>${calendar()}</div>
   <div class="panel desk" style="margin-top:20px"><h2>Time of week</h2>${hourWeek()}</div>
-  <div class="panel" style="margin-top:20px"><h2>Highlights</h2>${highlights(sites)}</div>`;
+  <div class="sect phone">Highlights</div>
+  <div class="panel" style="margin-top:20px"><h2 class="desk">Highlights</h2>${highlights(sites)}</div>`;
 }
+function phoneHero(perDay){
+  const today=S.range==="today",[d0,d1]=dayRange(),days=d1-d0+1,weekly=days>31,bins=[];
+  if(today){for(let h=0;h<24;h++)bins.push({h,lv:[0,0,0,0,0]});for(const i of C.vis)bins[new Date(V.t[i]*1000).getHours()].lv[lvOfBase(HB[urlHost[V.u[i]]])]++}
+  else for(let d=d0;d<=d1;d++){const bi=weekly?Math.floor((d-d0)/7):d-d0;if(!bins[bi])bins[bi]={d,lv:[0,0,0,0,0]};const m=C.byBaseDay.get(d);if(m)for(const[b,c]of m)bins[bi].lv[lvOfBase(b)]+=c}
+  const tot=bins.map(b=>b.lv.reduce((a,c)=>a+c,0)),sum=tot.reduce((a,b)=>a+b,0),n=bins.length,avg=today?0:sum/Math.max(1,weekly?n:C.spanDays);
+  const W=340,Hh=130,AX=30,mx=niceMax(Math.max(1,...tot)),bw=(W-AX)/n,y=v=>Hh-v/mx*Hh;
+  let g="";for(const v of[0,mx/2,mx])g+=`<line class="gl" x1="0" x2="${W-AX+4}" y1="${y(v)}" y2="${y(v)}"/><text x="${W-AX+8}" y="${y(v)+3.5}">${fmt(v)}</text>`;
+  const r=Math.min(3,bw*.3);let bars="";
+  bins.forEach((b,i)=>{const x=i*bw+bw*.18,w=bw*.64;if(tot[i]){bars+=`<clipPath id="pc${i}"><rect x="${x}" y="${y(tot[i])}" width="${w}" height="${Hh-y(tot[i])+r}" rx="${r}"/></clipPath><g clip-path="url(#pc${i})">`;let yy=Hh;for(let l=4;l>=0;l--){const h=b.lv[l]/mx*Hh;if(!h)continue;yy-=h;bars+=`<rect x="${x}" y="${yy}" width="${w}" height="${h}" fill="${LV[l][1]}"/>`}bars+="</g>"}
+    const lab=today?(b.h%6===0?(b.h===0?"12a":b.h<12?b.h+"a":b.h===12?"12p":(b.h-12)+"p"):""):n<=7?DOW[dateOfDay(b.d).getDay()][0]:i%Math.ceil(n/6)===0?dateOfDay(b.d).toLocaleDateString([], {month:"short",day:"numeric"}):"";
+    if(lab)bars+=`<text x="${today||n>7?x:x+w/2}" y="${Hh+15}" text-anchor="${today||n>7?"start":"middle"}">${lab}</text>`});
+  const al=avg&&!weekly?`<line class="avg" x1="0" x2="${W-AX+4}" y1="${y(avg)}" y2="${y(avg)}"/><text class="avgt" x="${W-AX+8}" y="${y(avg)+3.5}">avg</text>`:"";
+  const P=C.prev,ch=!today&&P?changeText(C.vis.length,P.visits):"";
+  return `<div class="panel hero"><div class="l">${today?"Today":weekly?"Daily average · by week":"Daily average"}</div>
+    <div class="n">${fmt(today?sum:perDay)}<small>visits</small></div>${ch?`<div class="c">${ch} from the previous ${S.range} days</div>`:""}
+    <div class="pchart"><svg viewBox="0 0 ${W} ${Hh+20}">${g}${bars}${al}</svg></div>
+    <div class="keys">${LV.map(([n,c])=>`<span><i style="background:${c}"></i>${n}</span>`).join("")}</div></div>`}
 const changeText=(c,p)=>{if(!p)return"";const x=Math.round((c-p)/p*100);return x===0?"Same":`${x>0?"Up":"Down"} ${Math.abs(x)}%`};
 function distract(){let n=0;for(const s of C.hab)if(s.level>=3)n+=s.n;return{n,pct:Math.round(n/Math.max(1,C.vis.length)*100)}}
 function highlights(sites){
@@ -429,8 +559,8 @@ function highlights(sites){
   const rows=[["Busiest hour",hp(ph)],busiest&&["Busiest day",`${dateOfDay(busiest[0]).toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"})} · ${fmt(busiest[1])} visits`],
     loyal&&["Most days",`${loyal.k} · ${loyal.days.size} of ${C.activeDays} days`],best.n>3&&["Longest streak on one site",`${best.k} · ${best.n} pages in a row`],
     ["Between midnight and 5 AM",`${Math.round(night/C.vis.length*100)}% of visits`]].filter(Boolean);
-  return rows.map(([a,b])=>`<div class="lr"><span class="nm muted">${a}</span><span class="v">${esc(b)}</span></div>`).join("")+
-    `<div class="lr"><button class="link" data-act="surprise">Show me a random page I forgot about →</button></div>`}
+  return rows.map(([a,b])=>`<div class="lr hl"><span class="nm muted">${a}</span><span class="v">${esc(b)}</span></div>`).join("")+
+    `<div class="lr"><button class="link" data-act="surprise" style="color:var(--accent)">Show me a random page I forgot about →</button></div>`}
 
 function sortHead(view,cols){const[sk,sd]=S.sort[view];return `<tr>${cols.map(([k,l,num,cls])=>k?`<th data-act="sort" data-v="${view}" data-k="${k}" class="${num?"num ":""}${sk===k?"s"+(sd>0?" asc":""):""}">${l}</th>`:`<th class="${cls||""}">${l}</th>`).join("")}</tr>`}
 const stBtns=k=>{const st=listState(k);return `<button class="st block ${st==="block"?"on":""}" data-act="mark" data-w="block" data-k="${esc(k)}" title="Block list">Block</button><button class="st allow ${st==="allow"?"on":""}" data-act="mark" data-w="allow" data-k="${esc(k)}" title="Allow list">Allow</button>`};
@@ -442,12 +572,12 @@ function vSites(){
   const[sk,sd]=S.sort.sites,get={name:r=>r.k,visits:r=>r.visits,pages:r=>r.pages.size,days:r=>r.days.size,time:r=>r.dur,last:r=>r.last}[sk];
   rows.sort((x,y)=>{const a=get(x),b=get(y);return(a<b?-1:a>b?1:0)*sd});C.siteRows=rows;
   const mx=Math.max(1,...rows.map(r=>r.visits)),shown=rows.slice(0,S.limit.sites);
-  return `<div class="muted small" style="margin-bottom:10px">${fmt(rows.length)} ${S.group==="host"?"hosts":"sites"}. Select a name to see its pages; tick rows to copy them or add them to a list.</div>
+  return `<div class="muted small lhead" style="margin-bottom:10px"><span class="desk">${fmt(rows.length)} ${S.group==="host"?"hosts":"sites"}. Select a name to see its pages; tick rows to copy them or add them to a list.</span><span class="phone">${fmt(rows.length)} ${S.group==="host"?"hosts":"sites"}</span>${selBtn()}</div>
   <div class="tablewrap"><table><thead>${sortHead("sites",[[null,selAllBox("sites",shown,r=>r.k)],["name","Site"],["visits","Visits",1],["pages","Pages",1],["days","Days",1],["time","Time",1],["last","Last visit",1],[null,"List"]])}</thead><tbody>
-  ${shown.map(r=>{const b=baseOf(r.k),lv=lvOfBase(b);return `<tr class="${sel.sites.has(r.k)?"sel":""}"><td><input type="checkbox" data-act="sel" data-v="sites" data-k="${esc(r.k)}" ${sel.sites.has(r.k)?"checked":""}></td>
-  <td class="nmcell"><span class="bar" style="width:${(r.visits/mx*100).toFixed(1)}%"></span><span class="in" data-act="open" data-k="${esc(r.k)}" style="cursor:pointer">${ico(r.icon,r.k)}<span>${esc(r.k)}</span><span class="cat" style="color:${lv>=3?LV[lv][1]:""}">${catOf(b)||""}</span></span></td>
+  ${shown.map(r=>{const b=baseOf(r.k),lv=lvOfBase(b);return `<tr class="${sel.sites.has(r.k)?"sel":""}"><td class="ck"><input type="checkbox" data-act="sel" data-v="sites" data-k="${esc(r.k)}" ${sel.sites.has(r.k)?"checked":""}></td>
+  <td class="nmcell"><span class="bar" style="width:${(r.visits/mx*100).toFixed(1)}%"></span><span class="in" data-act="open" data-k="${esc(r.k)}" style="cursor:pointer">${ico(r.icon,r.k)}<span class="nmt"><span class="t">${esc(r.k)}</span><span class="meter"><i style="width:${(r.visits/mx*100).toFixed(1)}%;background:${LV[lv][1]}"></i></span></span><span class="cat" style="color:${lv>=3?LV[lv][1]:""}">${catOf(b)||""}</span></span></td>
   <td class="num">${fmt(r.visits)}</td><td class="num hidem">${fmt(r.pages.size)}</td><td class="num hidem">${r.days.size}</td><td class="num hidem">${r.dur?hrs(r.dur):"–"}</td>
-  <td class="num hidem" title="${dtime(r.last)}">${ago(r.last)}</td><td style="white-space:nowrap">${stBtns(r.k)}</td></tr>${S.open===r.k?detailRow(r):""}`}).join("")}</tbody></table></div>
+  <td class="num hidem" title="${dtime(r.last)}">${ago(r.last)}</td><td class="stc" style="white-space:nowrap">${stBtns(r.k)}</td><td class="phone chev" data-act="open" data-k="${esc(r.k)}"></td></tr>${S.open===r.k&&!isPhone()?detailRow(r):""}`}).join("")}</tbody></table></div>
   ${more("sites",rows.length-shown.length)}`}
 function sitePages(k){return [...C.pages.values()].filter(p=>{const h=urlHost[p.u];return(S.group==="host"?H[h]:HB[h])===k}).sort((a,b)=>b.visits-a.visits)}
 function detailRow(r){const ps=sitePages(r.k);
@@ -460,10 +590,10 @@ function vPages(){
   const[sk,sd]=S.sort.pages,get={name:p=>(U[p.u][1]||U[p.u][0]).toLowerCase(),visits:p=>p.visits,last:p=>p.last,time:p=>p.dur}[sk];
   rows.sort((x,y)=>{const a=get(x),b=get(y);return(a<b?-1:a>b?1:0)*sd});C.pageRows=rows;
   const shown=rows.slice(0,S.limit.pages),mx=Math.max(1,...shown.map(p=>p.visits));
-  return `<div class="muted small" style="margin-bottom:10px">${fmt(rows.length)} pages${q?` matching “${esc(S.q)}”`:""}</div>
+  return `<div class="muted small lhead" style="margin-bottom:10px"><span>${fmt(rows.length)} pages${q?` matching “${esc(S.q)}”`:""}</span>${selBtn()}</div>
   <div class="tablewrap"><table><thead>${sortHead("pages",[[null,selAllBox("pages",shown,p=>p.u)],["name","Page"],[null,"Site",0,"hidem"],["visits","Visits",1],["time","Time",1],["last","Last visit",1]])}</thead><tbody>
-  ${shown.map(p=>{const h=urlHost[p.u];return `<tr class="${sel.pages.has(p.u)?"sel":""}"><td><input type="checkbox" data-act="sel" data-v="pages" data-k="${p.u}" ${sel.pages.has(p.u)?"checked":""}></td>
-  <td class="nmcell"><span class="bar" style="width:${(p.visits/mx*100).toFixed(1)}%"></span><span class="in ttl">${ico(h,H[h])}<span><a href="${esc(U[p.u][0])}" target="_blank" rel="noreferrer noopener" title="${esc(U[p.u][0])}">${esc(U[p.u][1]||U[p.u][0])}</a></span></span></td>
+  ${shown.map(p=>{const h=urlHost[p.u];return `<tr class="${sel.pages.has(p.u)?"sel":""}"><td class="ck"><input type="checkbox" data-act="sel" data-v="pages" data-k="${p.u}" ${sel.pages.has(p.u)?"checked":""}></td>
+  <td class="nmcell"><span class="bar" style="width:${(p.visits/mx*100).toFixed(1)}%"></span><span class="in ttl">${ico(h,H[h])}<span class="nmt"><a class="t" href="${esc(U[p.u][0])}" target="_blank" rel="noreferrer noopener" title="${esc(U[p.u][0])}">${esc(U[p.u][1]||U[p.u][0])}</a><span class="sub2 phone">${esc(H[h])} · ${ago(p.last)}</span></span></span></td>
   <td class="muted hidem">${esc(H[h])}</td><td class="num">${p.visits}</td><td class="num hidem">${p.dur?hrs(p.dur):"–"}</td><td class="num hidem" title="${dtime(p.last)}">${ago(p.last)}</td></tr>`}).join("")}</tbody></table></div>
   ${more("pages",rows.length-shown.length)}`}
 
@@ -478,12 +608,13 @@ function vSearches(){
   const topW=[...words].sort((a,b)=>b[1]-a[1]).slice(0,10);
   const shown=rows.slice(0,S.limit.searches),mx=Math.max(1,...shown.map(s=>s.count));
   return `<div class="grid2" style="margin:0 0 20px">
-    <div class="panel"><div class="sect phone" style="margin:8px 0 0">Where you search</div>${list(engs.slice(0,8).map(([e,v])=>({label:D.engines[e],value:v,act:"eng"})),{title:"Engine",col:"Searches",empty:"No searches in this period."})}</div>
-    <div class="panel"><div class="sect phone" style="margin:8px 0 0">Most-used words</div>${list(topW.map(([w,c])=>({label:w,value:c,act:"q"})),{title:"Word",col:"Searches",empty:"No searches in this period."})}</div></div>
+    <div class="gcell"><div class="sect phone">Where you search</div><div class="panel">${list(engs.slice(0,8).map(([e,v])=>({label:D.engines[e],value:v,act:"eng"})),{title:"Engine",col:"Searches",empty:"No searches in this period."})}</div></div>
+    <div class="gcell"><div class="sect phone">Most-used words</div><div class="panel">${list(topW.map(([w,c])=>({label:w,value:c,act:"q"})),{title:"Word",col:"Searches",empty:"No searches in this period."})}</div></div></div>
   <div class="chips"><button class="chip ${S.eng<0?"on":""}" data-act="eng" data-k="">All</button>${engs.slice(0,10).map(([e])=>`<button class="chip ${S.eng===e?"on":""}" data-act="eng" data-k="${esc(D.engines[e])}">${esc(D.engines[e])}</button>`).join("")}<span class="muted small" style="margin-left:auto;align-self:center">${fmt(rows.length)} different searches</span></div>
+  <div class="phone muted lhead"><span>${fmt(rows.length)} different searches</span>${selBtn()}</div>
   <div class="tablewrap"><table><thead>${sortHead("searches",[[null,selAllBox("searches",shown,s=>s.k)],["name","Search"],[null,"Where",0,"hidem"],["count","Times",1],[null,"Device",0,"hidem"],["last","Last",1]])}</thead><tbody>
-  ${shown.map(s=>`<tr class="${sel.searches.has(s.k)?"sel":""}"><td><input type="checkbox" data-act="sel" data-v="searches" data-k="${esc(s.k)}" ${sel.searches.has(s.k)?"checked":""}></td>
-  <td class="nmcell"><span class="bar" style="width:${(s.count/mx*100).toFixed(1)}%"></span><span class="in"><span><a href="${esc(U[s.u][0])}" target="_blank" rel="noreferrer noopener">${esc(s.term)}</a></span></span></td>
+  ${shown.map(s=>`<tr class="${sel.searches.has(s.k)?"sel":""}"><td class="ck"><input type="checkbox" data-act="sel" data-v="searches" data-k="${esc(s.k)}" ${sel.searches.has(s.k)?"checked":""}></td>
+  <td class="nmcell"><span class="bar" style="width:${(s.count/mx*100).toFixed(1)}%"></span><span class="in"><span class="nmt"><a class="t" href="${esc(U[s.u][0])}" target="_blank" rel="noreferrer noopener">${esc(s.term)}</a><span class="sub2 phone">${[...s.engs].map(e=>esc(D.engines[e])).join(", ")} · ${ago(s.last)}</span></span></span></td>
   <td class="muted hidem">${[...s.engs].map(e=>esc(D.engines[e])).join(", ")}</td><td class="num">${s.count}</td><td class="muted hidem">${[...s.devs].map(devName).map(esc).join(", ")}</td><td class="num hidem" title="${dtime(s.last)}">${ago(s.last)}</td></tr>`).join("")}</tbody></table></div>
   ${more("searches",rows.length-shown.length)}`}
 
@@ -495,13 +626,14 @@ function vHabits(){
   let prevLine="";if(C.prev){let pd=0,pt=0;for(const[b,n]of C.prev.byBase){pt+=n;if(levelOf(b,C.habMap.get(b)?.score)>=3)pd+=n}if(pt){const pp=Math.round(pd/pt*100),diff=dPct-pp;prevLine=diff===0?"The same share as the period before.":`${diff<0?"Down":"Up"} from ${pp}% the period before.`}}
   const toBlock=C.hab.filter(h=>!dismissed.has(h.k)&&h.level>=3&&!lists.block.includes(h.k));
   const loops=[...C.searches.values()].filter(s=>s.count>=5).sort((a,b)=>b.count-a.count).slice(0,12);
-  return `<p class="headline">${worst?`<b>${dPct}%</b> of your browsing went to distracting sites. You went back to <b>${esc(worst.k)}</b> ${worst.spd>=1?`${worst.spd.toFixed(1)} times a day`:`${worst.sessions} times`}.`:"Nothing distracting stands out in this period."}</p>
+  return `<div class="hcard"><p class="headline">${worst?`<b>${dPct}%</b> of your browsing went to distracting sites. You went back to <b>${esc(worst.k)}</b> ${worst.spd>=1?`${worst.spd.toFixed(1)} times a day`:`${worst.sessions} times`}.`:"Nothing distracting stands out in this period."}</p>
   <div class="muted">${prevLine} A visit after 10 or more minutes away counts as going back.</div>
   <div class="scale">${lvVisits.map((v,i)=>v?`<span style="width:${v/tot*100}%;background:${LV[i][1]}" title="${LV[i][0]}: ${fmt(v)} visits"></span>`:"").join("")}</div>
-  <div class="keys">${LV.map(([n,c],i)=>`<span><i style="background:${c}"></i>${n} ${Math.round(lvVisits[i]/tot*100)}%</span>`).join("")}</div>
-  <div class="grid2"><div class="panel"><h2>By ${C.spanDays>31?"week":"day"}</h2>${stackChart()}</div>
-    <div class="panel"><h2>Searches you repeat</h2>${list(loops.map(s=>({label:s.term,value:s.count,act:"opensearch",k:s.k})),{title:"Search",col:"Times",empty:"No repeated searches."})}</div></div>
-  <div class="panel" style="margin-top:20px"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-top:6px"><h2 style="margin:0">Sites ranked by how often you go back</h2><span style="flex:1"></span>
+  <div class="keys">${LV.map(([n,c],i)=>`<span><i style="background:${c}"></i>${n} ${Math.round(lvVisits[i]/tot*100)}%</span>`).join("")}</div></div>
+  <div class="grid2"><div class="gcell"><div class="sect phone">By ${C.spanDays>31?"week":"day"}</div><div class="panel"><h2 class="desk">By ${C.spanDays>31?"week":"day"}</h2><div class="phone" style="height:10px"></div>${stackChart()}</div></div>
+    <div class="gcell"><div class="sect phone">Searches you repeat</div><div class="panel"><h2 class="desk">Searches you repeat</h2>${list(loops.map(s=>({label:s.term,value:s.count,act:"opensearch",k:s.k})),{title:"Search",col:"Times",empty:"No repeated searches."})}</div></div></div>
+  <div class="sect phone">How often you go back</div>
+  <div class="panel hrows" style="margin-top:20px"><div class="habhead" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-top:6px"><h2 class="desk" style="margin:0">Sites ranked by how often you go back</h2><span style="flex:1"></span>
     ${toBlock.length?`<button class="btn" data-act="blockall">Add ${toBlock.length} distracting sites to block list</button>`:""}${dismissed.size?`<button class="link" data-act="undismiss">Show ${dismissed.size} hidden</button>`:""}</div>
   ${rows.length?rows.slice(0,60).map(h=>{const st=listState(h.k);return `<div class="hrow">${ico(h.icon,h.k)}<div style="min-width:0"><div><a href="#" data-act="gosite" data-k="${esc(h.k)}">${esc(h.k)}</a>${st?` <span class="muted small">· on ${st} list</span>`:""}</div><div class="why">${esc(h.why.join(" · "))}</div></div>
     <span class="lv" style="color:${LV[h.level][1]}">${LV[h.level][0]}</span>
@@ -520,13 +652,39 @@ function vLists(){const f=LS.get("fmt","plain");
 
 /* ---------- render ---------- */
 function render(){
-  $("#tabs").innerHTML=TABS.map(([k,l])=>`<button class="${S.tab===k?"on":""}" data-act="tab" data-k="${k}">${l}</button>`).join("");
+  $("#tabs").innerHTML=TABS.map(([k,l])=>`<button class="${S.tab===k?"on":""}" data-act="tab" data-k="${k}"><svg class="tbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${TAB_ICONS[k]}</svg>${l}</button>`).join("");
+  document.body.className=`tab-${S.tab}${S.selmode?" selmode":""}`;
+  $("#ptitle").textContent=S.tab==="overview"?"History":TABS.find(t=>t[0]===S.tab)[1];
+  $("#seg").innerHTML=SEG.map(([k,l])=>`<button class="${S.range===k?"on":""}" data-act="range" data-k="${k}">${l}</button>`).join("");
   $("#custom").style.display=S.range==="custom"?"inline":"none";
   $("#grp").checked=S.group==="base";
   const v={overview:vOverview,sites:vSites,searches:vSearches,pages:vPages,habits:vHabits,lists:vLists}[S.tab]||vOverview;
   $("#main").innerHTML=v()+actionBar();
+  document.querySelectorAll(".cal").forEach(c=>c.scrollLeft=c.scrollWidth);
 }
-function actionBar(){const v=S.tab;if(!sel[v]||!sel[v].size)return "";const n=sel[v].size,clr=`<span style="flex:1"></span><button class="link" data-act="clearsel">Clear</button>`;
+const selBtn=()=>`<button class="link phone" data-act="selmode">${S.selmode?"Done":"Select"}</button>`;
+/* ---------- phone sheets ---------- */
+let sheetFn=null;
+function openSheet(fn){sheetFn=fn;fn();$("#modal").classList.add("show")}
+function closeSheet(){sheetFn=null;$("#modal").classList.remove("show")}
+function siteSheet(k){const r=C.sites.get(k);if(!r)return;const ps=sitePages(k),b=baseOf(k),lv=lvOfBase(b),st=listState(k),cat=catOf(b);
+  $("#mbody").innerHTML=`<div class="grab"></div><div class="sh-h">${ico(r.icon,k)}<div style="min-width:0;flex:1"><div class="sh-t">${esc(k)}</div><div class="small" style="color:${LV[lv][1]};font-weight:600">${LV[lv][0]}${cat?` · ${cat}`:""}</div></div><button class="xbtn" data-act="mclose">Done</button></div>
+  <div class="tiles" style="margin-top:12px">${[["Visits",fmt(r.visits)],["Pages",fmt(r.pages.size)],["Days",fmt(r.days.size)],["Last visit",ago(r.last)]].map(([l,n])=>`<div class="tile"><div class="l">${l}</div><div class="n">${n}</div></div>`).join("")}</div>
+  <div class="segbtns"><button class="${st==="block"?"on block":""}" data-act="mark" data-w="block" data-k="${esc(k)}">${st==="block"?"On block list":"Block"}</button><button class="${st==="allow"?"on allow":""}" data-act="mark" data-w="allow" data-k="${esc(k)}">${st==="allow"?"On allow list":"Allow"}</button></div>
+  <div class="sect">${fmt(ps.length)} pages</div><div class="group">${ps.slice(0,150).map(p=>`<a class="lr" href="${esc(U[p.u][0])}" target="_blank" rel="noreferrer noopener"><span class="nm"><span class="t">${esc(U[p.u][1]||U[p.u][0])}</span><span class="sub2">${ago(p.last)}</span></span><span class="v">${p.visits}</span></a>`).join("")}</div>
+  ${ps.length>150?`<div class="muted small" style="margin:8px 16px">…and ${fmt(ps.length-150)} more (included when you copy)</div>`:""}
+  <div class="sheet-acts"><button class="btn pri" data-act="copysitepages" data-k="${esc(k)}">Copy ${fmt(ps.length)} links</button><button class="btn" data-act="copysitepages" data-f="md" data-k="${esc(k)}">Copy Markdown</button></div>`}
+function filterSheet(){
+  $("#mbody").innerHTML=`<div class="grab"></div><div class="sh-h"><div class="sh-t" style="flex:1">Filters</div><button class="xbtn" data-act="mclose">Done</button></div>
+  <div class="group" style="margin-top:8px">
+    <label class="lr"><span class="nm">Device</span><select data-f="dev"><option value="-1">All devices</option>${D.devices.map((d,i)=>`<option value="${i}" ${S.dev===i?"selected":""}>${esc(d.name)}</option>`).join("")}</select></label>
+    ${D.profiles.length>1?`<label class="lr"><span class="nm">Profile</span><select data-f="prof"><option value="-1">All profiles</option>${D.profiles.map((p,i)=>`<option value="${i}" ${S.prof===i?"selected":""}>${esc(p)}</option>`).join("")}</select></label>`:""}
+    <label class="lr"><span class="nm">Combine subdomains</span><input type="checkbox" class="sw" data-f="grp" ${S.group==="base"?"checked":""}></label></div>
+  <div class="sect">Custom dates</div>
+  <div class="group"><label class="lr"><span class="nm">From</span><input type="date" data-f="from" value="${esc(S.from)}"></label><label class="lr"><span class="nm">To</span><input type="date" data-f="to" value="${esc(S.to)}"></label></div>
+  <div class="group" style="margin-top:22px"><button class="lr" data-act="surprise"><span class="nm" style="color:var(--accent)">Show me a random page I forgot about</span></button></div>
+  <div class="muted small" style="margin:12px 16px">${esc($("#gen").textContent)}</div>`}
+function actionBar(){const v=S.tab;if(!sel[v]||!sel[v].size||(isPhone()&&!S.selmode))return "";const n=sel[v].size,clr=`<span style="flex:1"></span><button class="link" data-act="clearsel">Clear</button>`;
   if(v==="sites")return `<div class="actions show"><b>${n} selected</b><button class="btn pri" data-act="copysel" data-f="plain">Copy domains</button><button class="btn" data-act="copysel" data-f="urls">Copy links</button><button class="btn" data-act="copysel" data-f="allpages">Copy every page</button><button class="btn" data-act="copysel" data-f="ublock">Copy uBlock rules</button><button class="btn" data-act="addsel" data-w="block">Add to block list</button><button class="btn" data-act="addsel" data-w="allow">Add to allow list</button>${clr}</div>`;
   if(v==="pages")return `<div class="actions show"><b>${n} selected</b><button class="btn pri" data-act="copysel" data-f="urls">Copy links</button><button class="btn" data-act="copysel" data-f="md">Copy Markdown</button><button class="btn" data-act="copysel" data-f="tsv">Copy title + link</button><button class="btn" data-act="copysel" data-f="domains">Copy domains</button>${clr}</div>`;
   if(v==="searches")return `<div class="actions show"><b>${n} selected</b><button class="btn pri" data-act="copysel" data-f="terms">Copy searches</button><button class="btn" data-act="copysel" data-f="urls">Copy result links</button>${clr}</div>`;
@@ -539,7 +697,7 @@ async function copy(text,n,label){
 let tt;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),1800)}
 function surprise(){const now=Date.now()/1000;let pool=[...C.pages.values()].filter(p=>p.visits<=2&&U[p.u][1]&&now-p.last>86400*3&&!/login|signin|auth|oauth|account|checkout|callback/i.test(U[p.u][0]));
   if(!pool.length)pool=[...C.pages.values()];if(!pool.length)return;const p=pool[Math.floor(Math.random()*pool.length)],h=urlHost[p.u];
-  $("#mbody").innerHTML=`<div class="muted small">A page you visited ${ago(p.last)}</div><h2 style="font-size:18px;margin:6px 0">${esc(U[p.u][1]||U[p.u][0])}</h2><div class="muted" style="display:flex;gap:8px;align-items:center">${ico(h,H[h])}${esc(H[h])}</div>
+  sheetFn=null;$("#mbody").innerHTML=`<div class="grab phone"></div><div class="muted small">A page you visited ${ago(p.last)}</div><h2 style="font-size:18px;margin:6px 0">${esc(U[p.u][1]||U[p.u][0])}</h2><div class="muted" style="display:flex;gap:8px;align-items:center">${ico(h,H[h])}${esc(H[h])}</div>
   <div style="display:flex;gap:8px;margin-top:18px"><a class="btn pri" href="${esc(U[p.u][0])}" target="_blank" rel="noreferrer noopener">Open</a><button class="btn" data-act="surprise">Another</button><button class="btn" data-act="mclose">Close</button></div>`;
   $("#modal").classList.add("show")}
 function download(name,text){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"text/plain"}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
@@ -551,7 +709,12 @@ function goTab(t){S.tab=t;LS.set("tab",t);render();scrollTo(0,0)}
 document.addEventListener("click",ev=>{
   const el=ev.target.closest("[data-act]");if(!el)return;const a=el.dataset.act,k=el.dataset.k,v=el.dataset.v;
   if(a==="gosite"||a==="tab")ev.preventDefault();
-  if(a==="tab"){S.q="";$("#q").value="";goTab(k)}
+  if(a==="tab"){S.q="";$("#q").value="";S.selmode=false;goTab(k)}
+  else if(a==="range"){S.range=k;LS.set("range",k);$("#range").value=k;refresh()}
+  else if(a==="filters")openSheet(filterSheet);
+  else if(a==="selmode"){S.selmode=!S.selmode;if(!S.selmode)sel[S.tab]?.clear();render()}
+  else if(a==="open"&&isPhone())openSheet(()=>siteSheet(k));
+  else if((a==="site"||a==="gosite")&&isPhone()&&C.sites.has(k))openSheet(()=>siteSheet(k));
   else if(a==="metric"){S.metric=k;render()}
   else if(a==="sort"){const s=S.sort[v];if(s[0]===k)s[1]*=-1;else{s[0]=k;s[1]=k==="name"?1:-1}render()}
   else if(a==="sel"){const key=v==="pages"?+k:k;el.checked?sel[v].add(key):sel[v].delete(key);render()}
@@ -565,7 +728,7 @@ document.addEventListener("click",ev=>{
   else if(a==="eng"){const i=D.engines.indexOf(k);S.eng=(i<0||S.eng===i)?-1:i;S.tab="searches";render()}
   else if(a==="q"){S.q=k;$("#q").value=k;render()}
   else if(a==="opensearch"){S.q=k;$("#q").value=k;goTab("searches")}
-  else if(a==="mark"){const w=el.dataset.w,cur=listState(k);setList([k],cur===w?"":w);toast(cur===w?`Removed ${k} from ${w} list`:`Added ${k} to ${w} list`);render()}
+  else if(a==="mark"){const w=el.dataset.w,cur=listState(k);setList([k],cur===w?"":w);toast(cur===w?`Removed ${k} from ${w} list`:`Added ${k} to ${w} list`);render();if(sheetFn)sheetFn()}
   else if(a==="addsel"){const ks=[...sel.sites];setList(ks,el.dataset.w);toast(`Added ${ks.length} to ${el.dataset.w} list`);render()}
   else if(a==="blockall"){const ks=C.hab.filter(h=>!dismissed.has(h.k)&&h.level>=3&&!lists.block.includes(h.k)).map(h=>h.k);setList(ks,"block");toast(`Added ${ks.length} sites to block list`);render()}
   else if(a==="dismiss"){dismissed.add(k);saveDismissed();render()}
@@ -581,12 +744,16 @@ document.addEventListener("click",ev=>{
   else if(a==="dllist"){const w=el.dataset.w,f=LS.get("fmt","plain");download(`${w}list-${f}.${f==="policy"?"json":"txt"}`,FORMATS[f][1](lists[w]))}
   else if(a==="clearlist"){if(confirm(`Clear your ${el.dataset.w} list?`)){lists[el.dataset.w]=[];saveLists();render()}}
   else if(a==="surprise")surprise();
-  else if(a==="mclose")$("#modal").classList.remove("show");
+  else if(a==="mclose")closeSheet();
 });
-$("#modal").addEventListener("click",e=>{if(e.target.id==="modal")$("#modal").classList.remove("show")});
+$("#modal").addEventListener("click",e=>{if(e.target.id==="modal")closeSheet()});
 document.addEventListener("input",e=>{
   if(e.target.dataset.list){const w=e.target.dataset.list;lists[w]=[...new Set(e.target.value.split(/[\s,]+/).map(x=>x.trim().toLowerCase().replace(/^https?:\/\//,"").replace(/^www\./,"").replace(/\/.*$/,"").replace(/^\|\||\^$/g,"")).filter(Boolean))];saveLists()}});
-document.addEventListener("change",e=>{if(e.target.id==="fmt"){LS.set("fmt",e.target.value);render()}if(e.target.dataset.list)render()});
+document.addEventListener("change",e=>{const f=e.target.dataset.f;
+  if(f==="dev"||f==="prof"){S[f]=+e.target.value;$("#"+f).value=e.target.value;refresh()}
+  else if(f==="grp"){$("#grp").checked=e.target.checked;$("#grp").onchange({target:e.target})}
+  else if(f==="from"||f==="to"){S[f]=e.target.value;$("#"+f).value=e.target.value;S.range="custom";$("#range").value="custom";refresh()}
+  if(e.target.id==="fmt"){LS.set("fmt",e.target.value);render()}if(e.target.dataset.list)render()});
 let qt;$("#q").addEventListener("input",e=>{clearTimeout(qt);qt=setTimeout(()=>{S.q=e.target.value.trim();S.limit={sites:300,pages:300,searches:300};if(S.q&&(S.tab==="overview"||S.tab==="lists"))S.tab="sites";render()},120)});
 $("#surprise").onclick=surprise;
 $("#grp").onchange=e=>{S.group=e.target.checked?"base":"host";LS.set("group",S.group);sel.sites.clear();S.open=null;refresh()};
@@ -598,7 +765,7 @@ if(D.profiles.length>1)$("#prof").innerHTML=`<option value="-1">All profiles</op
 $("#prof").onchange=e=>{S.prof=+e.target.value;refresh()};
 $("#from").onchange=e=>{S.from=e.target.value;refresh()};$("#to").onchange=e=>{S.to=e.target.value;refresh()};
 $("#gen").textContent=`Updated ${ago(D.generated)} · ${fmt(NV)} visits since ${NV?new Date(V.t[0]*1000).toLocaleDateString():"–"}`;
-document.addEventListener("keydown",e=>{const tag=e.target.tagName;if(e.key==="Escape"){$("#modal").classList.remove("show");if(tag==="INPUT")e.target.blur();return}
+document.addEventListener("keydown",e=>{const tag=e.target.tagName;if(e.key==="Escape"){closeSheet();if(tag==="INPUT")e.target.blur();return}
   if(tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT"||e.ctrlKey||e.metaKey||e.altKey)return;
   if(e.key==="/"){e.preventDefault();$("#q").focus()}else if(/^[1-6]$/.test(e.key))goTab(TABS[+e.key-1][0])});
 $("#rebuild").style.display="";$("#rebuild").textContent="Settings";$("#rebuild").onclick=()=>location.href="/settings.html";
