@@ -536,12 +536,12 @@ function phoneHero(perDay){
   else for(let d=d0;d<=d1;d++){const bi=weekly?Math.floor((d-d0)/7):d-d0;if(!bins[bi])bins[bi]={d,lv:[0,0,0,0,0]};const m=C.byBaseDay.get(d);if(m)for(const[b,c]of m)bins[bi].lv[lvOfBase(b)]+=c}
   const tot=bins.map(b=>b.lv.reduce((a,c)=>a+c,0)),sum=tot.reduce((a,b)=>a+b,0),n=bins.length,avg=today?0:sum/Math.max(1,weekly?n:C.spanDays);
   const W=340,Hh=130,AX=30,mx=niceMax(Math.max(1,...tot)),bw=(W-AX)/n,y=v=>Hh-v/mx*Hh;
-  let g="";for(const v of[0,mx/2,mx])g+=`<line class="gl" x1="0" x2="${W-AX+4}" y1="${y(v)}" y2="${y(v)}"/><text x="${W-AX+8}" y="${y(v)+3.5}">${fmt(v)}</text>`;
+  const showAvg=avg&&!weekly;let g="";for(const v of[0,mx/2,mx])g+=`<line class="gl" x1="0" x2="${W-AX+4}" y1="${y(v)}" y2="${y(v)}"/>${showAvg&&Math.abs(y(v)-y(avg))<12?"":`<text x="${W-AX+8}" y="${y(v)+3.5}">${fmt(v)}</text>`}`;
   const r=Math.min(3,bw*.3);let bars="";
   bins.forEach((b,i)=>{const x=i*bw+bw*.18,w=bw*.64;if(tot[i]){bars+=`<clipPath id="pc${i}"><rect x="${x}" y="${y(tot[i])}" width="${w}" height="${Hh-y(tot[i])+r}" rx="${r}"/></clipPath><g clip-path="url(#pc${i})">`;let yy=Hh;for(let l=4;l>=0;l--){const h=b.lv[l]/mx*Hh;if(!h)continue;yy-=h;bars+=`<rect x="${x}" y="${yy}" width="${w}" height="${h}" fill="${LV[l][1]}"/>`}bars+="</g>"}
     const lab=today?(b.h%6===0?(b.h===0?"12a":b.h<12?b.h+"a":b.h===12?"12p":(b.h-12)+"p"):""):n<=7?DOW[dateOfDay(b.d).getDay()][0]:i%Math.ceil(n/6)===0?dateOfDay(b.d).toLocaleDateString([], {month:"short",day:"numeric"}):"";
     if(lab)bars+=`<text x="${today||n>7?x:x+w/2}" y="${Hh+15}" text-anchor="${today||n>7?"start":"middle"}">${lab}</text>`});
-  const al=avg&&!weekly?`<line class="avg" x1="0" x2="${W-AX+4}" y1="${y(avg)}" y2="${y(avg)}"/><text class="avgt" x="${W-AX+8}" y="${y(avg)+3.5}">avg</text>`:"";
+  const al=showAvg?`<line class="avg" x1="0" x2="${W-AX+4}" y1="${y(avg)}" y2="${y(avg)}"/><text class="avgt" x="${W-AX+8}" y="${y(avg)+3.5}">avg</text>`:"";
   const P=C.prev,ch=!today&&P?changeText(C.vis.length,P.visits):"";
   return `<div class="panel hero"><div class="l">${today?"Today":weekly?"Daily average · by week":"Daily average"}</div>
     <div class="n">${fmt(today?sum:perDay)}<small>visits</small></div>${ch?`<div class="c">${ch} from the previous ${S.range} days</div>`:""}
