@@ -114,6 +114,8 @@ async function loadData(progress) {
   const names = new Map(me.devices.map((d) => [d.id, d.name]));
   const dev = (k, name) => { if (!devIdx.has(k)) devIdx.set(k, devices.push({ name, kind: "phone" }) - 1); return devIdx.get(k); };
   const v = { t: [], u: [], d: [], dev: [], p: [] };
+  const profiles = [], profIdx = new Map();
+  const prof = (n) => { if (!profIdx.has(n)) profIdx.set(n, profiles.push(n) - 1); return profIdx.get(n); };
   const rows = c.v.slice().sort((x, y) => x[0] - y[0]);
   for (const [t, uid, src, device, priv] of rows) {
     const rec = c.urls[uid];
@@ -123,8 +125,14 @@ async function loadData(progress) {
       if (!hostIdx.has(h)) hostIdx.set(h, hosts.push(h) - 1);
       urlIdx.set(uid, urls.push([rec[0], rec[1], hostIdx.get(h)]) - 1);
     }
-    v.t.push(t); v.u.push(urlIdx.get(uid)); v.d.push(0); v.p.push(priv ? 1 : 0);
-    v.dev.push(src === 2 ? dev("export", "Safari (export)") : dev(device || "live", `${names.get(device) || "Removed device"} (live)`));
+    let di;
+    if (src === 2) di = dev("export", "Safari (export)");
+    else if (src === 3) {
+      const [tok, synced] = String(device || "").split("/");
+      di = synced ? dev("chrome-synced", "Chrome on other devices") : dev(device, `${names.get(tok) || "Removed computer"} (Chrome)`);
+    } else di = dev(device || "live", `${names.get(device) || "Removed device"} (live)`);
+    v.t.push(t); v.u.push(urlIdx.get(uid)); v.d.push(0); v.dev.push(di);
+    v.p.push(prof(src === 3 ? "Chrome" : priv ? "Safari Private Browsing" : "Safari"));
   }
   const engines = [], engIdx = new Map(), last = new Map(), parsed = new Map();
   const s = { t: [], term: [], e: [], dev: [], p: [], u: [] };
@@ -141,7 +149,7 @@ async function loadData(progress) {
   }
   return {
     generated: Math.floor(Date.now() / 1000),
-    profiles: v.p.includes(1) ? ["Safari", "Private Browsing"] : ["Safari"],
+    profiles,
     devices, hosts, icons: {}, urls, engines, v, s,
   };
 }

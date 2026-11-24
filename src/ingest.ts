@@ -7,6 +7,7 @@ import { Env, HttpError, cleanTitle, cleanUrl, json, now } from "./util";
 
 export const SOURCE_LIVE = 1;
 export const SOURCE_EXPORT = 2;
+export const SOURCE_CHROME = 3;
 /** A live visit and an exported visit of the same page this close together are the same visit. */
 const SAME_VISIT_SECS = 120;
 /** Reloads of the same page within this window count once. */
@@ -19,6 +20,7 @@ interface Row {
   title: string | null;
   t: number;
   priv: number;
+  synced?: boolean;
 }
 
 function cleanRows(input: unknown, max: number, t0: number, t1: number): Row[] {
@@ -29,7 +31,7 @@ function cleanRows(input: unknown, max: number, t0: number, t1: number): Row[] {
     const url = cleanUrl(v?.url);
     const t = Math.floor(Number(v?.t));
     if (!url || !(t > t0 && t < t1)) continue;
-    rows.push({ url, title: cleanTitle(v?.title), t, priv: v?.private ? 1 : 0 });
+    rows.push({ url, title: cleanTitle(v?.title), t, priv: v?.private ? 1 : 0, synced: !!v?.synced });
   }
   return rows;
 }
@@ -145,4 +147,26 @@ export async function importFinish(req: Request, env: Env, ctx: Ctx): Promise<Re
     `UPDATE users SET export_through = MAX(COALESCE(export_through, 0), ?), data_version = data_version + ? WHERE id = ?`,
   ).bind(t1, merged ? 1 : 0, ctx.userId).run();
   return json({ ok: true, merged });
+}
+
+/** POST /api/chrome/batch from the PC sync script: {visits: [{url, title, t, synced}]}.
+ *  synced = Chrome sync brought this visit from another device (e.g. Chrome on iPhone). */
+export async function chromeBatch(req: Request, env: Env, ctx: Ctx): Promise<Response> {
+  const body = (await req.json().catch(() => null)) as { visits?: unknown } | null;
+  const rows = cleanRows(body?.visits, IMPORT_BATCH, 0, now() + 86400);
+  if (!rows.length) return json({ ok: true, added: 0 });
+  const ids = await urlIds(env, ctx.userId, rows);
+  const stmts: D1PreparedStatement[] = [];
+  for (let i = 0; i < rows.length; i += 16) {
+    const chunk = rows.slice(i, i + 16);
+    stmts.push(
+      env.DB.prepare(
+        `INSERT OR IGNORE INTO visits (user_id, t, url_id, source, device, private, added)
+         VALUES ${chunk.map(() => "(?, ?, ?, ?, ?, 0, ?)").join(",")}`,
+      ).bind(...chunk.flatMap((r) => [ctx.userId, r.t, ids.get(r.url)!, SOURCE_CHROME, ctx.tokenId + (r.synced ? "/synced" : ""), now()])),
+    );
+  }
+  let added = 0;
+  for (const r of await env.DB.batch(stmts)) added += r.meta.changes || 0;
+  return json({ ok: true, added });
 }

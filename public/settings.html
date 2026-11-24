@@ -46,6 +46,19 @@
     <p class="ok small" id="upres"></p>
   </div>
 
+  <h2 id="computer">3 · Chrome on your computer (optional)</h2>
+  <div class="card">
+    <p>Sends this PC's Chrome history every 15 minutes, including what Chrome on your iPhone synced to it. Needs Windows with Python installed.</p>
+    <ol>
+      <li><a href="/chrome_sync.py" download>Download chrome_sync.py</a> and keep it somewhere permanent (for example Documents).</li>
+      <li>Create a key, then run the command it shows in PowerShell, in the folder with the script.</li>
+    </ol>
+    <input id="pcname" placeholder="Computer name, e.g. PC" value="PC" maxlength="40">
+    <button class="btn secondary" id="mkpc">Create key for this computer</button>
+    <div class="hidden" id="pcout"><p class="small">Run this once. The key is only shown now:</p><span class="code" id="pccmd"></span><button class="btn secondary" id="copypc">Copy command</button></div>
+    <div class="err" id="e5"></div>
+  </div>
+
   <h2>Weekly reminder (optional)</h2>
   <div class="card">
     <p>In the <b>Shortcuts</b> app: <b>Automation › New Automation › Time of Day</b>, pick <b>Weekly</b> (say Sunday 7 PM), choose <b>Run Immediately</b>, add the action <b>Open URLs</b> with this link:</p>
@@ -158,6 +171,13 @@ $("#upload").onclick = () => run($("#upload"), $("#e2"), async () => {
     : "Nothing new in that file. You're up to date.";
   load();
 });
+$("#mkpc").onclick = () => run($("#mkpc"), $("#e5"), async () => {
+  const r = await api("/api/tokens", { name: $("#pcname").value, kind: "computer" });
+  $("#pccmd").textContent = `python chrome_sync.py --setup ${r.origin} ${r.token}`;
+  $("#pcout").classList.remove("hidden");
+  load();
+});
+$("#copypc").onclick = async () => { await navigator.clipboard.writeText($("#pccmd").textContent); $("#copypc").textContent = "Copied"; };
 $("#addpk").onclick = () => run($("#addpk"), $("#e3"), async () => { await createPasskey(); load(); });
 $("#delhist").onclick = () => run($("#delhist"), $("#e4"), async () => {
   if (!confirm("Delete all your history? This can't be undone.")) return;

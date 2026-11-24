@@ -9,6 +9,8 @@ A private, multi-user web app for your Safari history. It shows stats, lists of 
 | **Live sync**: a script running in the free [Userscripts](https://apps.apple.com/app/id1463298887) Safari extension | Sends each page's link, title and time as you browse. Visits wait on the phone when offline and are sent later. | Free |
 | **Safari export**: Settings › Apps › Safari › Export (iOS 18.2+) | Brings in all past history and fills gaps. Upload it on the Settings page. The browser reads the file and sends only link, title and time, in batches. Uploading again is safe because duplicates are merged. | Free |
 
+| **Chrome on a computer** (optional, temporary backup feed): `public/chrome_sync.py`, which you can download from Settings | Every 15 minutes, Windows Task Scheduler sends new visits from Chrome on the PC, including visits Chrome sync brought in from Chrome on your iPhone. It uses only the Python standard library. | Free |
+
 Merging rules: a page reloaded within 30 s counts once. A live visit within 2 minutes of the same page in an export is treated as the same visit, and the export's copy is kept. Private Browsing visits only come from live sync.
 
 ## Privacy

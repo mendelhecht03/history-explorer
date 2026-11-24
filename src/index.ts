@@ -1,6 +1,6 @@
 import * as auth from "./auth";
 import { syncUrls, syncVisits } from "./data";
-import { importBatch, importFinish, importState, liveVisits } from "./ingest";
+import { chromeBatch, importBatch, importFinish, importState, liveVisits } from "./ingest";
 import { userscript } from "./userscript";
 import { Env, HttpError, json, now, randomId, sha256, text } from "./util";
 
@@ -53,6 +53,10 @@ async function handle(req: Request, env: Env): Promise<Response> {
     if (ctx.via !== "token") throw new HttpError(403, "Live visits need a device key");
     return liveVisits(req, env, ctx);
   }
+  if (m === "POST" && path === "/api/chrome/batch") {
+    if (ctx.via !== "token") throw new HttpError(403, "Chrome sync needs a device key");
+    return chromeBatch(req, env, ctx);
+  }
 
   // ---- everything else is for the signed-in browser only ----
   if (ctx.via !== "session") throw new HttpError(403, "Not allowed with a device key");
@@ -80,16 +84,23 @@ async function handle(req: Request, env: Env): Promise<Response> {
   }
 
   if (m === "POST" && path === "/api/tokens") {
-    const body = (await req.json().catch(() => ({}))) as { name?: string };
-    const name = String(body.name || "iPhone").trim().slice(0, 40) || "iPhone";
+    const body = (await req.json().catch(() => ({}))) as { name?: string; kind?: string };
+    const computer = body.kind === "computer";
+    const fallback = computer ? "PC" : "iPhone";
+    const name = String(body.name || fallback).trim().slice(0, 40) || fallback;
     const id = randomId(9), token = "hx_" + randomId(30), link = randomId(18);
-    await env.DB.batch([
+    const stmts = [
       env.DB.prepare("DELETE FROM install_links WHERE expires < ?").bind(now()),
       env.DB.prepare("INSERT INTO tokens (id, user_id, token_hash, name, created) VALUES (?, ?, ?, ?, ?)")
         .bind(id, uid, await sha256(token), name, now()),
-      env.DB.prepare("INSERT INTO install_links (id, user_id, token, expires) VALUES (?, ?, ?, ?)")
-        .bind(link, uid, token, now() + 600),
-    ]);
+    ];
+    // A computer gets its key once, to paste into the sync script; a phone gets a short-lived install link.
+    if (computer) {
+      await env.DB.batch(stmts);
+      return json({ id, name, token, origin: env.ORIGIN });
+    }
+    stmts.push(env.DB.prepare("INSERT INTO install_links (id, user_id, token, expires) VALUES (?, ?, ?, ?)").bind(link, uid, token, now() + 600));
+    await env.DB.batch(stmts);
     return json({ id, name, installUrl: `${env.ORIGIN}/install/${link}.user.js` });
   }
   const tok = path.match(/^\/api\/tokens\/([\w-]+)$/);
